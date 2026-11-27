@@ -77,7 +77,7 @@
       <span id="toastText">Berhasil disimpan</span>
     </div>
 
-    <!-- Kartu Ringkasan Utama Piket (Token 4 Digit & Statistik Hari Ini) -->
+    <!-- Kartu Ringkasan Utama Piket (Token 4 Digit & Statistik Tanggal Aktif) -->
     <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <!-- Token Absensi Harian 4 Digit -->
       <div class="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-5 rounded-2xl shadow-xs flex flex-col justify-between">
@@ -138,21 +138,30 @@
     </section>
 
     <!-- =================================================================== -->
-    <!-- TAB 1: MONITORING KEHADIRAN HARIAN & INPUT PRESENSI MANUAL          -->
+    <!-- TAB 1: MONITORING KEHADIRAN PER TANGGAL & INPUT PRESENSI MANUAL     -->
     <!-- =================================================================== -->
     <section id="tab-monitoring" class="tab-panel space-y-5">
-      <!-- Bagian A: Monitoring Kehadiran Tutor Hari Ini -->
+      <!-- Bagian A: Monitoring Kehadiran Tutor per Tanggal -->
       <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h2 class="text-base font-bold text-slate-900">1. Monitoring Kehadiran Tutor</h2>
-            <p class="text-xs text-slate-500">Pantau dan catat kehadiran atau keterlambatan Tutor pada jadwal hari berjalan.</p>
+            <p class="text-xs text-slate-500">Pantau dan catat kehadiran atau keterlambatan Tutor berdasarkan tanggal pelaksanaan jadwal.</p>
           </div>
-          <select id="monitorDayFilter" class="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-700">
-            <option value="TODAY">Jadwal Hari Ini (Otomatis WIB)</option>
-            <option value="Jumat">Lihat Jadwal Jumat</option>
-            <option value="Sabtu">Lihat Jadwal Sabtu</option>
-          </select>
+          <div class="flex items-center gap-2">
+            <label for="monitorDateInput" class="text-xs font-semibold text-slate-600">Tanggal Jadwal:</label>
+            <input
+              type="date"
+              id="monitorDateInput"
+              class="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800"
+            />
+            <button
+              id="resetMonitorTodayBtn"
+              class="px-3 py-2 text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl font-semibold"
+            >
+              Hari Ini
+            </button>
+          </div>
         </div>
 
         <div class="overflow-x-auto border border-slate-200 rounded-xl">
@@ -180,7 +189,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 class="text-base font-bold text-slate-900">2. Presensi Manual & Monitoring Warga Belajar</h2>
-            <p class="text-xs text-slate-500">Pilih jadwal mata pelajaran untuk melihat siswa yang sudah/belum absen atau membantu presensi manual.</p>
+            <p class="text-xs text-slate-500">Pilih jadwal mata pelajaran pada tanggal di atas untuk memeriksa atau membantu presensi manual siswa.</p>
           </div>
           <div class="flex flex-wrap gap-2">
             <select id="piketSelectSchedule" class="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 max-w-sm">
@@ -201,7 +210,7 @@
               <tr>
                 <th class="py-3 px-3">NISN / ID</th>
                 <th class="py-3 px-3">Nama Warga Belajar</th>
-                <th class="py-3 px-3">Status Hari Ini</th>
+                <th class="py-3 px-3">Status Kehadiran</th>
                 <th class="py-3 px-3">Keterangan</th>
                 <th class="py-3 px-3 text-right">Input Presensi Manual</th>
               </tr>
@@ -392,14 +401,22 @@
     let rombelsMap = {};
     let usersMap = {};
     let schedulesMap = {};
-    let todayTutorAttMap = {};
-    let todayStudentAttMap = {};
+    let allTutorAttMap = {};
+    let allStudentAttMap = {};
 
     function showToast(msg) {
       const box = document.getElementById("toastBox");
       document.getElementById("toastText").textContent = msg;
       box.classList.remove("hidden");
       setTimeout(() => box.classList.add("hidden"), 3200);
+    }
+
+    function getIndonesianDayName(dateISO) {
+      if (!dateISO) return "-";
+      const [y, m, d] = dateISO.split("-").map(Number);
+      const dt = new Date(Date.UTC(y, m - 1, d));
+      const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+      return days[dt.getUTCDay()];
     }
 
     // Jam WIB Real-Time
@@ -421,7 +438,9 @@
     updateClock();
     setInterval(updateClock, 15000);
 
-    document.getElementById("holidayDate").value = getWIBNow().dateISO;
+    const initialWib = getWIBNow();
+    document.getElementById("monitorDateInput").value = initialWib.dateISO;
+    document.getElementById("holidayDate").value = initialWib.dateISO;
 
     // Navigasi Tab
     function switchTab(tabName) {
@@ -476,7 +495,6 @@
       initListeners();
     });
 
-    // Pastikan Token Harian (4 Digit) Tersedia
     function ensureDailyToken() {
       const { dateISO } = getWIBNow();
       const tokenRef = ref(db, `daily_tokens/${dateISO}`);
@@ -552,15 +570,15 @@
         renderStudentAttendanceList();
       });
 
-      // 7. Tutor Attendances Today
-      onValue(ref(db, `tutor_attendances/${todayISO}`), (snap) => {
-        todayTutorAttMap = snap.val() || {};
+      // 7. Tutor Attendances
+      onValue(ref(db, "tutor_attendances"), (snap) => {
+        allTutorAttMap = snap.val() || {};
         renderTutorMonitor();
       });
 
-      // 8. Student Attendances Today
-      onValue(ref(db, `attendances/${todayISO}`), (snap) => {
-        todayStudentAttMap = snap.val() || {};
+      // 8. Student Attendances
+      onValue(ref(db, "attendances"), (snap) => {
+        allStudentAttMap = snap.val() || {};
         updateTodayAttendanceStats();
         renderStudentAttendanceList();
       });
@@ -571,7 +589,6 @@
       });
     }
 
-    // Render Banner Pengumuman
     function renderAnnouncements(annObj) {
       const container = document.getElementById("announcementBannerContainer");
       const active = Object.values(annObj)
@@ -604,10 +621,13 @@
       lucide.createIcons();
     }
 
-    // Update Statistik Ringkas Kehadiran Hari Ini
+    // Statistik Kehadiran Khusus Hari Ini
     function updateTodayAttendanceStats() {
+      const todayISO = getWIBNow().dateISO;
+      const todayRecordsGroup = allStudentAttMap[todayISO] || {};
       let hadir = 0, izin = 0, sakit = 0, alfa = 0;
-      Object.values(todayStudentAttMap).forEach((schedRecords) => {
+
+      Object.values(todayRecordsGroup).forEach((schedRecords) => {
         Object.values(schedRecords || {}).forEach((rec) => {
           if (rec.status === "Hadir") hadir++;
           else if (rec.status === "Izin") izin++;
@@ -615,31 +635,30 @@
           else if (rec.status === "Tanpa Keterangan") alfa++;
         });
       });
+
       document.getElementById("statSiswaHadir").textContent = `${hadir} Hadir`;
       document.getElementById("statSiswaDetail").textContent = `Izin: ${izin} • Sakit: ${sakit} • Alfa: ${alfa}`;
     }
 
-    // Helper mendapatkan hari aktif sesuai filter monitoring
-    function getSelectedMonitorDay() {
-      const filter = document.getElementById("monitorDayFilter").value;
-      if (filter === "TODAY") return getWIBNow().dayName;
-      return filter;
+    function getSelectedMonitorDate() {
+      return document.getElementById("monitorDateInput").value || getWIBNow().dateISO;
     }
 
     // =========================================================================
-    // 1. MONITORING KEHADIRAN TUTOR
+    // 1. MONITORING KEHADIRAN TUTOR PER TANGGAL
     // =========================================================================
     function renderTutorMonitor() {
       const tbody = document.getElementById("tutorMonitorBody");
-      const targetDay = getSelectedMonitorDay();
-      const todayISO = getWIBNow().dateISO;
+      const targetDate = getSelectedMonitorDate();
+      const dayName = getIndonesianDayName(targetDate);
+      const dateTutorAtt = allTutorAttMap[targetDate] || {};
 
       const entries = Object.entries(schedulesMap)
-        .filter(([_, s]) => s.hari === targetDay)
-        .sort((a, b) => a[1].jam_mulai.localeCompare(b[1].jam_mulai));
+        .filter(([_, s]) => s.tanggal === targetDate)
+        .sort((a, b) => (a[1].jam_mulai || "").localeCompare(b[1].jam_mulai || ""));
 
       if (entries.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">Tidak ada jadwal pembelajaran pada hari ${targetDay}.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">Tidak ada jadwal pembelajaran pada tanggal ${targetDate} (${dayName}).</td></tr>`;
         return;
       }
 
@@ -654,14 +673,14 @@
         .map(([schedId, s]) => {
           const tutor = usersMap[s.tutor_id] || {};
           const rombel = rombelsMap[s.rombel_id] || {};
-          const attRec = todayTutorAttMap[schedId]?.[s.tutor_id];
+          const attRec = dateTutorAtt[schedId]?.[s.tutor_id];
           const status = attRec ? attRec.status : "Belum Tercatat";
 
           return `
             <tr class="hover:bg-slate-50/70">
               <td class="py-3 px-3">
                 <span class="font-bold text-slate-800">${s.jam_mulai} - ${s.jam_selesai}</span>
-                <div class="text-[11px] text-slate-500">${s.hari} (${s.sesi})</div>
+                <div class="text-[11px] text-slate-500">${dayName} (${s.sesi})</div>
               </td>
               <td class="py-3 px-3">
                 <div class="font-bold text-slate-900">${s.mata_pelajaran}</div>
@@ -688,18 +707,25 @@
         btn.addEventListener("click", async () => {
           const [schedId, tutorId] = btn.dataset.tutorAtt.split("|");
           const status = btn.dataset.status;
-          await set(ref(db, `tutor_attendances/${todayISO}/${schedId}/${tutorId}`), {
+          await set(ref(db, `tutor_attendances/${targetDate}/${schedId}/${tutorId}`), {
             status,
             catatan: `Dicatat Petugas Piket (${currentUser.nama_lengkap})`,
             recorded_by: currentUser.uid,
             created_at: Date.now()
           });
-          showToast(`Kehadiran tutor dicatat: ${status}.`);
+          showToast(`Kehadiran tutor (${targetDate}) dicatat: ${status}.`);
         });
       });
     }
 
-    document.getElementById("monitorDayFilter").addEventListener("change", () => {
+    document.getElementById("monitorDateInput").addEventListener("change", () => {
+      renderTutorMonitor();
+      populateScheduleDropdown();
+      renderStudentAttendanceList();
+    });
+
+    document.getElementById("resetMonitorTodayBtn").addEventListener("click", () => {
+      document.getElementById("monitorDateInput").value = getWIBNow().dateISO;
       renderTutorMonitor();
       populateScheduleDropdown();
       renderStudentAttendanceList();
@@ -710,12 +736,12 @@
     // =========================================================================
     function populateScheduleDropdown() {
       const sel = document.getElementById("piketSelectSchedule");
-      const targetDay = getSelectedMonitorDay();
+      const targetDate = getSelectedMonitorDate();
       const prev = sel.value;
 
       const entries = Object.entries(schedulesMap)
-        .filter(([_, s]) => s.hari === targetDay)
-        .sort((a, b) => a[1].jam_mulai.localeCompare(b[1].jam_mulai));
+        .filter(([_, s]) => s.tanggal === targetDate)
+        .sort((a, b) => (a[1].jam_mulai || "").localeCompare(b[1].jam_mulai || ""));
 
       sel.innerHTML = '<option value="">-- Pilih Jadwal Mata Pelajaran --</option>';
       entries.forEach(([id, s]) => {
@@ -726,7 +752,7 @@
         sel.appendChild(opt);
       });
 
-      if (prev && schedulesMap[prev] && schedulesMap[prev].hari === targetDay) {
+      if (prev && schedulesMap[prev] && schedulesMap[prev].tanggal === targetDate) {
         sel.value = prev;
       } else if (entries.length > 0) {
         sel.value = entries[0][0];
@@ -737,10 +763,10 @@
       const tbody = document.getElementById("piketStudentAttBody");
       const schedId = document.getElementById("piketSelectSchedule").value;
       const query = document.getElementById("piketSearchStudent").value.toLowerCase();
-      const todayISO = getWIBNow().dateISO;
+      const targetDate = getSelectedMonitorDate();
 
       if (!schedId || !schedulesMap[schedId]) {
-        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">Tidak ada jadwal mata pelajaran terpilih.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">Tidak ada jadwal mata pelajaran terpilih pada tanggal ini.</td></tr>';
         return;
       }
 
@@ -761,7 +787,7 @@
         return;
       }
 
-      const schedRecords = todayStudentAttMap[schedId] || {};
+      const schedRecords = allStudentAttMap[targetDate]?.[schedId] || {};
       const badgeMap = {
         Hadir: "bg-emerald-100 text-emerald-800",
         Izin: "bg-sky-100 text-sky-800",
@@ -802,13 +828,13 @@
         btn.addEventListener("click", async () => {
           const siswaId = btn.dataset.piketAtt;
           const status = btn.dataset.status;
-          await set(ref(db, `attendances/${todayISO}/${schedId}/${siswaId}`), {
+          await set(ref(db, `attendances/${targetDate}/${schedId}/${siswaId}`), {
             status,
             metode_absen: "Manual Piket",
             recorded_by: currentUser.uid,
             created_at: Date.now()
           });
-          showToast(`Presensi ${usersMap[siswaId]?.nama_lengkap} dicatat: ${status}.`);
+          showToast(`Presensi ${usersMap[siswaId]?.nama_lengkap} (${targetDate}) dicatat: ${status}.`);
         });
       });
     }
@@ -952,7 +978,6 @@
       });
     }
 
-    // Tombol Cepat Hari Libur Darurat
     document.getElementById("quickEmergencyHolidayBtn").addEventListener("click", async () => {
       const wib = getWIBNow();
       const ket = prompt(
@@ -996,7 +1021,7 @@
         .map(([tgl, h]) => `
           <div class="flex items-center justify-between bg-amber-50/70 border border-amber-200 px-3 py-2.5 rounded-xl">
             <div>
-              <span class="font-bold text-amber-900">${tgl}</span>
+              <span class="font-bold text-amber-900">${tgl} (${getIndonesianDayName(tgl)})</span>
               <p class="text-slate-700 mt-0.5">${h.keterangan}</p>
             </div>
             <button data-del-holiday="${tgl}" class="text-rose-600 hover:text-rose-800 font-semibold px-2 py-1">Hapus</button>
