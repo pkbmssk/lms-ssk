@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Petugas Piket - LMS PKBM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 pb-20 md:pb-8">
+
+  <!-- Top Navbar -->
+  <header class="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0 overflow-hidden p-1">
+          <img id="navLogoImg" src="" alt="Logo" class="w-full h-full object-contain hidden bg-white rounded-lg" />
+          <i id="navLogoFallback" data-lucide="clipboard-list" class="w-6 h-6"></i>
+        </div>
+        <div class="min-w-0">
+          <h1 id="navPkbmName" class="text-sm sm:text-base font-bold text-slate-900 truncate">LMS PKBM</h1>
+          <p class="text-[11px] text-amber-700 font-medium truncate">
+            Panel Petugas Piket • <span id="navUserName">Petugas Piket</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div class="hidden sm:flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-full text-xs font-semibold">
+          <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-600"></i>
+          <span id="headerWibClock">--:-- WIB</span>
+        </div>
+        <button
+          id="logoutBtn"
+          class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold border border-rose-200 transition"
+        >
+          <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+          <span>Keluar</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Desktop Tab Navigation -->
+    <nav class="hidden md:block bg-slate-50/80 border-t border-slate-200">
+      <div class="max-w-7xl mx-auto px-4 flex gap-1">
+        <button data-tab="monitoring" class="tab-btn px-4 py-3 text-xs font-semibold border-b-2 border-amber-600 text-amber-700 flex items-center gap-2">
+          <i data-lucide="user-check" class="w-4 h-4"></i> Monitoring & Presensi Manual
+        </button>
+        <button data-tab="reset" class="tab-btn px-4 py-3 text-xs font-semibold border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2">
+          <i data-lucide="key-round" class="w-4 h-4"></i> Reset Password Cepat
+        </button>
+        <button data-tab="jurnal" class="tab-btn px-4 py-3 text-xs font-semibold border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2">
+          <i data-lucide="notebook-pen" class="w-4 h-4"></i> Jurnal Piket & Hari Libur
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Kontainer Utama -->
+  <main class="max-w-7xl mx-auto px-4 pt-5 space-y-5">
+
+    <!-- Banner Pengumuman Aktif -->
+    <section id="announcementBannerContainer" class="hidden space-y-2"></section>
+
+    <!-- Banner Status Hari Libur -->
+    <section id="holidayAlertBanner" class="hidden bg-amber-50 border border-amber-300 text-amber-900 p-4 rounded-2xl flex items-start gap-3">
+      <i data-lucide="calendar-off" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i>
+      <div class="text-xs">
+        <p class="font-bold text-sm">Hari Ini Ditetapkan Sebagai Hari Libur</p>
+        <p id="holidayAlertDesc" class="mt-0.5">Keterangan libur</p>
+      </div>
+    </section>
+
+    <!-- Notifikasi Toast -->
+    <div id="toastBox" class="hidden fixed bottom-20 md:bottom-6 right-4 z-50 max-w-sm bg-slate-900 text-white text-xs font-medium px-4 py-3 rounded-2xl shadow-lg flex items-center gap-2.5">
+      <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+      <span id="toastText">Berhasil disimpan</span>
+    </div>
+
+    <!-- Kartu Ringkasan Utama Piket (Token 4 Digit & Statistik Hari Ini) -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Token Absensi Harian 4 Digit -->
+      <div class="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-5 rounded-2xl shadow-xs flex flex-col justify-between">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full">
+              Token Absen Hari Ini
+            </span>
+            <p class="text-xs text-amber-100 mt-1.5">Bagikan kode 4 digit ini untuk kelas Tatap Muka.</p>
+          </div>
+          <button
+            id="copyTokenBtn"
+            class="p-2 rounded-xl bg-white/20 hover:bg-white/30 text-white transition"
+            title="Salin Token"
+          >
+            <i data-lucide="copy" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <div class="my-3 bg-white/15 backdrop-blur-xs border border-white/25 rounded-xl py-2.5 text-center">
+          <span id="dailyTokenDisplay" class="text-3xl sm:text-4xl font-mono font-extrabold tracking-[0.35em]">----</span>
+        </div>
+        <p id="tokenDateInfo" class="text-[11px] text-amber-100 text-center">Zona Waktu WIB</p>
+      </div>
+
+      <!-- Statistik Kehadiran Hari Ini -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-500">Presensi Warga Belajar Hari Ini</span>
+          <span class="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+            <i data-lucide="users" class="w-4 h-4"></i>
+          </span>
+        </div>
+        <div class="my-2">
+          <p id="statSiswaHadir" class="text-2xl font-bold text-slate-900">0 Hadir</p>
+          <p id="statSiswaDetail" class="text-xs text-slate-500 mt-1">Izin: 0 • Sakit: 0 • Alfa: 0</p>
+        </div>
+        <p class="text-[11px] text-emerald-700 font-medium">Pembaruan otomatis real-time (WIB)</p>
+      </div>
+
+      <!-- Aksi Cepat Hari Libur Darurat -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-500">Status Operasional Belajar</span>
+            <span id="dayStatusBadge" class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800">WIB</span>
+          </div>
+          <p id="todayDateHeading" class="text-sm font-bold text-slate-900 mt-2">Memuat tanggal...</p>
+          <p class="text-xs text-slate-500 mt-1">Gunakan tombol di bawah jika terjadi kondisi darurat sehingga KBM diliburkan.</p>
+        </div>
+        <button
+          id="quickEmergencyHolidayBtn"
+          class="mt-3 w-full py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition"
+        >
+          <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
+          <span>Tandai Hari Ini Libur Darurat</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 1: MONITORING KEHADIRAN HARIAN & INPUT PRESENSI MANUAL          -->
+    <!-- =================================================================== -->
+    <section id="tab-monitoring" class="tab-panel space-y-5">
+      <!-- Bagian A: Monitoring Kehadiran Tutor Hari Ini -->
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">1. Monitoring Kehadiran Tutor</h2>
+            <p class="text-xs text-slate-500">Pantau dan catat kehadiran atau keterlambatan Tutor pada jadwal hari berjalan.</p>
+          </div>
+          <select id="monitorDayFilter" class="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-700">
+            <option value="TODAY">Jadwal Hari Ini (Otomatis WIB)</option>
+            <option value="Jumat">Lihat Jadwal Jumat</option>
+            <option value="Sabtu">Lihat Jadwal Sabtu</option>
+          </select>
+        </div>
+
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-3">Jam & Sesi</th>
+                <th class="py-3 px-3">Mata Pelajaran & Rombel</th>
+                <th class="py-3 px-3">Nama Tutor</th>
+                <th class="py-3 px-3">Status Tutor</th>
+                <th class="py-3 px-3 text-right">Catat Kehadiran Tutor</th>
+              </tr>
+            </thead>
+            <tbody id="tutorMonitorBody" class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="5" class="py-6 text-center text-slate-400">Memuat jadwal tutor...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Bagian B: Monitoring & Input Presensi Manual Warga Belajar -->
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">2. Presensi Manual & Monitoring Warga Belajar</h2>
+            <p class="text-xs text-slate-500">Pilih jadwal mata pelajaran untuk melihat siswa yang sudah/belum absen atau membantu presensi manual.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <select id="piketSelectSchedule" class="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 max-w-sm">
+              <option value="">-- Pilih Mata Pelajaran --</option>
+            </select>
+            <input
+              type="text"
+              id="piketSearchStudent"
+              placeholder="Cari nama / NISN siswa..."
+              class="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl"
+            />
+          </div>
+        </div>
+
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-3">NISN / ID</th>
+                <th class="py-3 px-3">Nama Warga Belajar</th>
+                <th class="py-3 px-3">Status Hari Ini</th>
+                <th class="py-3 px-3">Keterangan</th>
+                <th class="py-3 px-3 text-right">Input Presensi Manual</th>
+              </tr>
+            </thead>
+            <tbody id="piketStudentAttBody" class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="5" class="py-6 text-center text-slate-400">Pilih mata pelajaran pada menu dropdown di atas.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 2: RESET PASSWORD CEPAT DI LOKASI                               -->
+    <!-- =================================================================== -->
+    <section id="tab-reset" class="tab-panel hidden space-y-5">
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Bantuan Reset Password Cepat</h2>
+            <p class="text-xs text-slate-500">
+              Gunakan fitur ini untuk membantu Warga Belajar atau Tutor yang lupa sandi di lokasi PKBM. Sandi akan dikembalikan ke kata sandi default:
+              <strong id="defaultPwHint" class="text-amber-700 font-mono">pkbm1234</strong>
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+          <input
+            type="text"
+            id="resetSearchInput"
+            placeholder="Ketik Nama atau NISN / NIP pengguna..."
+            class="flex-1 px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl"
+          />
+          <select id="resetRoleFilter" class="px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl">
+            <option value="warga_belajar">Warga Belajar (Siswa)</option>
+            <option value="tutor">Tutor (Pengajar)</option>
+            <option value="ALL">Semua Warga Belajar & Tutor</option>
+          </select>
+        </div>
+
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-3">NISN / NIP</th>
+                <th class="py-3 px-3">Nama Lengkap</th>
+                <th class="py-3 px-3">Role / Paket Rombel</th>
+                <th class="py-3 px-3 text-right">Aksi Bantuan</th>
+              </tr>
+            </thead>
+            <tbody id="resetUsersTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 3: JURNAL HARIAN PIKET & HARI LIBUR DARURAT                     -->
+    <!-- =================================================================== -->
+    <section id="tab-jurnal" class="tab-panel hidden grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <!-- Form & Riwayat Jurnal Piket -->
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Jurnal Harian Petugas Piket</h2>
+          <p class="text-xs text-slate-500">Catat kejadian harian, keterlambatan tutor, atau kelas kosong pada hari Jumat & Sabtu untuk dilaporkan ke Pengelola.</p>
+        </div>
+
+        <form id="journalForm" class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Kategori Laporan</label>
+            <select id="journalKategori" required class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl font-medium">
+              <option value="Kejadian Harian">Kejadian Harian / Situasi KBM</option>
+              <option value="Keterlambatan Tutor">Keterlambatan Tutor</option>
+              <option value="Kelas Kosong">Kelas Kosong / Tutor Berhalangan</option>
+              <option value="Kendala Teknis">Kendala Teknis / Sinyal / Perangkat</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Uraian Kejadian</label>
+            <textarea
+              id="journalDeskripsi"
+              rows="3"
+              required
+              placeholder="Tuliskan detail waktu, kelas/rombel, dan keterangan kejadian..."
+              class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl"
+            ></textarea>
+          </div>
+
+          <button type="submit" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-xl">
+            Simpan Laporan ke Jurnal Piket
+          </button>
+        </form>
+
+        <div class="space-y-2">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wide">Riwayat Catatan Piket</h3>
+          <div id="picketJournalHistory" class="space-y-2 text-xs max-h-96 overflow-y-auto"></div>
+        </div>
+      </div>
+
+      <!-- Manajemen Hari Libur Darurat -->
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Pengaturan Hari Libur Darurat</h2>
+          <p class="text-xs text-slate-500">Menonaktifkan sesi absensi pada tanggal tertentu agar persentase kehadiran siswa tetap aman.</p>
+        </div>
+
+        <form id="holidayForm" class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Tanggal Libur</label>
+            <input type="date" id="holidayDate" required class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Alasan / Keterangan Libur</label>
+            <input
+              type="text"
+              id="holidayDesc"
+              required
+              placeholder="Contoh: Cuaca Ekstrem / Kegiatan Mendesak PKBM"
+              class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl"
+            />
+          </div>
+          <button type="submit" class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-xl">
+            Tetapkan Tanggal Libur
+          </button>
+        </form>
+
+        <div class="space-y-2">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wide">Daftar Tanggal Libur Terdaftar</h3>
+          <div id="holidayList" class="space-y-2 text-xs"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 grid grid-cols-3 text-[10px] font-semibold text-slate-500">
+    <button data-tab="monitoring" class="tab-btn-mobile py-2.5 flex flex-col items-center gap-1 text-amber-600">
+      <i data-lucide="user-check" class="w-4 h-4"></i> Monitoring
+    </button>
+    <button data-tab="reset" class="tab-btn-mobile py-2.5 flex flex-col items-center gap-1">
+      <i data-lucide="key-round" class="w-4 h-4"></i> Reset Sandi
+    </button>
+    <button data-tab="jurnal" class="tab-btn-mobile py-2.5 flex flex-col items-center gap-1">
+      <i data-lucide="notebook-pen" class="w-4 h-4"></i> Jurnal & Libur
+    </button>
+  </nav>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut,
+      signInWithEmailAndPassword,
+      updatePassword
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import {
+      ref,
+      get,
+      set,
+      push,
+      update,
+      remove,
+      onValue
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+    import {
+      firebaseConfig,
+      auth,
+      db,
+      toLoginEmail,
+      getWIBNow,
+      getPageByRole
+    } from "./config.js";
+
+    // Secondary App untuk reset password cepat tanpa memutus sesi Petugas Piket
+    const secondaryApp = initializeApp(firebaseConfig, "SecondaryPiketWorker");
+    const secondaryAuth = getAuth(secondaryApp);
+
+    lucide.createIcons();
+
+    let currentUser = null;
+    let appSettings = { default_password: "pkbm1234" };
+    let rombelsMap = {};
+    let usersMap = {};
+    let schedulesMap = {};
+    let todayTutorAttMap = {};
+    let todayStudentAttMap = {};
+
+    function showToast(msg) {
+      const box = document.getElementById("toastBox");
+      document.getElementById("toastText").textContent = msg;
+      box.classList.remove("hidden");
+      setTimeout(() => box.classList.add("hidden"), 3200);
+    }
+
+    // Jam WIB Real-Time
+    function updateClock() {
+      const wib = getWIBNow();
+      document.getElementById("headerWibClock").textContent = `${wib.dayName}, ${wib.timeShort} WIB`;
+      document.getElementById("todayDateHeading").textContent = wib.formattedDate;
+      document.getElementById("tokenDateInfo").textContent = `Berlaku untuk ${wib.formattedDate}`;
+
+      const badge = document.getElementById("dayStatusBadge");
+      if (wib.isLearningDay) {
+        badge.className = "px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800";
+        badge.textContent = `AKTIF (${wib.dayName.toUpperCase()})`;
+      } else {
+        badge.className = "px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800";
+        badge.textContent = "NON-JADWAL";
+      }
+    }
+    updateClock();
+    setInterval(updateClock, 15000);
+
+    document.getElementById("holidayDate").value = getWIBNow().dateISO;
+
+    // Navigasi Tab
+    function switchTab(tabName) {
+      document.querySelectorAll(".tab-panel").forEach((el) => el.classList.add("hidden"));
+      document.getElementById(`tab-${tabName}`).classList.remove("hidden");
+
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        const active = btn.dataset.tab === tabName;
+        btn.classList.toggle("border-amber-600", active);
+        btn.classList.toggle("text-amber-700", active);
+        btn.classList.toggle("border-transparent", !active);
+        btn.classList.toggle("text-slate-600", !active);
+      });
+
+      document.querySelectorAll(".tab-btn-mobile").forEach((btn) => {
+        btn.classList.toggle("text-amber-600", btn.dataset.tab === tabName);
+      });
+    }
+
+    document.querySelectorAll(".tab-btn, .tab-btn-mobile").forEach((btn) => {
+      btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+    });
+
+    // Salin Token 4 Digit
+    document.getElementById("copyTokenBtn").addEventListener("click", () => {
+      const code = document.getElementById("dailyTokenDisplay").textContent;
+      if (code && code !== "----") {
+        navigator.clipboard?.writeText(code);
+        showToast(`Token Absensi (${code}) disalin ke clipboard.`);
+      }
+    });
+
+    // Logout
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "index.html";
+    });
+
+    // Cek Autentikasi & Role Petugas Piket
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+      const snap = await get(ref(db, `users/${user.uid}`));
+      if (!snap.exists() || snap.val().role !== "piket") {
+        window.location.href = snap.exists() ? getPageByRole(snap.val().role) : "index.html";
+        return;
+      }
+      currentUser = { uid: user.uid, ...snap.val() };
+      document.getElementById("navUserName").textContent = currentUser.nama_lengkap;
+      initListeners();
+    });
+
+    // Pastikan Token Harian (4 Digit) Tersedia
+    function ensureDailyToken() {
+      const { dateISO } = getWIBNow();
+      const tokenRef = ref(db, `daily_tokens/${dateISO}`);
+      onValue(tokenRef, async (snap) => {
+        if (snap.exists()) {
+          document.getElementById("dailyTokenDisplay").textContent = snap.val().token_code;
+        } else {
+          const code = String(Math.floor(1000 + Math.random() * 9000));
+          await set(tokenRef, { token_code: code, created_at: Date.now() });
+        }
+      });
+    }
+
+    function initListeners() {
+      const todayISO = getWIBNow().dateISO;
+      ensureDailyToken();
+
+      // 1. Settings
+      onValue(ref(db, "settings"), (snap) => {
+        if (snap.exists()) {
+          appSettings = { ...appSettings, ...snap.val() };
+          if (appSettings.nama_pkbm) document.getElementById("navPkbmName").textContent = appSettings.nama_pkbm;
+          document.getElementById("defaultPwHint").textContent = appSettings.default_password || "pkbm1234";
+          if (appSettings.logo_url) {
+            const img = document.getElementById("navLogoImg");
+            img.src = appSettings.logo_url;
+            img.classList.remove("hidden");
+            document.getElementById("navLogoFallback").classList.add("hidden");
+          }
+        }
+      });
+
+      // 2. Announcements
+      onValue(ref(db, "announcements"), (snap) => {
+        renderAnnouncements(snap.val() || {});
+      });
+
+      // 3. Holidays
+      onValue(ref(db, "holidays"), (snap) => {
+        const holidays = snap.val() || {};
+        renderHolidays(holidays);
+        const banner = document.getElementById("holidayAlertBanner");
+        if (holidays[todayISO]) {
+          banner.classList.remove("hidden");
+          document.getElementById("holidayAlertDesc").textContent = holidays[todayISO].keterangan;
+        } else {
+          banner.classList.add("hidden");
+        }
+      });
+
+      // 4. Rombels
+      onValue(ref(db, "rombels"), (snap) => {
+        rombelsMap = snap.val() || {};
+        populateScheduleDropdown();
+        renderTutorMonitor();
+        renderStudentAttendanceList();
+        renderResetUsersTable();
+      });
+
+      // 5. Users
+      onValue(ref(db, "users"), (snap) => {
+        usersMap = snap.val() || {};
+        renderTutorMonitor();
+        renderStudentAttendanceList();
+        renderResetUsersTable();
+      });
+
+      // 6. Schedules
+      onValue(ref(db, "schedules"), (snap) => {
+        schedulesMap = snap.val() || {};
+        populateScheduleDropdown();
+        renderTutorMonitor();
+        renderStudentAttendanceList();
+      });
+
+      // 7. Tutor Attendances Today
+      onValue(ref(db, `tutor_attendances/${todayISO}`), (snap) => {
+        todayTutorAttMap = snap.val() || {};
+        renderTutorMonitor();
+      });
+
+      // 8. Student Attendances Today
+      onValue(ref(db, `attendances/${todayISO}`), (snap) => {
+        todayStudentAttMap = snap.val() || {};
+        updateTodayAttendanceStats();
+        renderStudentAttendanceList();
+      });
+
+      // 9. Picket Journals
+      onValue(ref(db, "picket_journals"), (snap) => {
+        renderPicketJournals(snap.val() || {});
+      });
+    }
+
+    // Render Banner Pengumuman
+    function renderAnnouncements(annObj) {
+      const container = document.getElementById("announcementBannerContainer");
+      const active = Object.values(annObj)
+        .filter((a) => a.is_active !== false)
+        .sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
+
+      if (active.length === 0) {
+        container.classList.add("hidden");
+        return;
+      }
+
+      const styles = {
+        info: "bg-sky-50 border-sky-200 text-sky-900",
+        penting: "bg-rose-50 border-rose-200 text-rose-900",
+        libur: "bg-amber-50 border-amber-200 text-amber-900"
+      };
+
+      container.classList.remove("hidden");
+      container.innerHTML = active
+        .map((a) => `
+          <div class="p-3.5 rounded-2xl border ${styles[a.tipe] || styles.info} flex items-start gap-3">
+            <i data-lucide="megaphone" class="w-4 h-4 shrink-0 mt-0.5"></i>
+            <div class="text-xs">
+              <p class="font-bold">${a.judul}</p>
+              <p class="mt-0.5 opacity-90">${a.isi}</p>
+            </div>
+          </div>
+        `)
+        .join("");
+      lucide.createIcons();
+    }
+
+    // Update Statistik Ringkas Kehadiran Hari Ini
+    function updateTodayAttendanceStats() {
+      let hadir = 0, izin = 0, sakit = 0, alfa = 0;
+      Object.values(todayStudentAttMap).forEach((schedRecords) => {
+        Object.values(schedRecords || {}).forEach((rec) => {
+          if (rec.status === "Hadir") hadir++;
+          else if (rec.status === "Izin") izin++;
+          else if (rec.status === "Sakit") sakit++;
+          else if (rec.status === "Tanpa Keterangan") alfa++;
+        });
+      });
+      document.getElementById("statSiswaHadir").textContent = `${hadir} Hadir`;
+      document.getElementById("statSiswaDetail").textContent = `Izin: ${izin} • Sakit: ${sakit} • Alfa: ${alfa}`;
+    }
+
+    // Helper mendapatkan hari aktif sesuai filter monitoring
+    function getSelectedMonitorDay() {
+      const filter = document.getElementById("monitorDayFilter").value;
+      if (filter === "TODAY") return getWIBNow().dayName;
+      return filter;
+    }
+
+    // =========================================================================
+    // 1. MONITORING KEHADIRAN TUTOR
+    // =========================================================================
+    function renderTutorMonitor() {
+      const tbody = document.getElementById("tutorMonitorBody");
+      const targetDay = getSelectedMonitorDay();
+      const todayISO = getWIBNow().dateISO;
+
+      const entries = Object.entries(schedulesMap)
+        .filter(([_, s]) => s.hari === targetDay)
+        .sort((a, b) => a[1].jam_mulai.localeCompare(b[1].jam_mulai));
+
+      if (entries.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">Tidak ada jadwal pembelajaran pada hari ${targetDay}.</td></tr>`;
+        return;
+      }
+
+      const statusStyles = {
+        Hadir: "bg-emerald-100 text-emerald-800",
+        Terlambat: "bg-amber-100 text-amber-800",
+        Izin: "bg-sky-100 text-sky-800",
+        "Tidak Hadir": "bg-rose-100 text-rose-800"
+      };
+
+      tbody.innerHTML = entries
+        .map(([schedId, s]) => {
+          const tutor = usersMap[s.tutor_id] || {};
+          const rombel = rombelsMap[s.rombel_id] || {};
+          const attRec = todayTutorAttMap[schedId]?.[s.tutor_id];
+          const status = attRec ? attRec.status : "Belum Tercatat";
+
+          return `
+            <tr class="hover:bg-slate-50/70">
+              <td class="py-3 px-3">
+                <span class="font-bold text-slate-800">${s.jam_mulai} - ${s.jam_selesai}</span>
+                <div class="text-[11px] text-slate-500">${s.hari} (${s.sesi})</div>
+              </td>
+              <td class="py-3 px-3">
+                <div class="font-bold text-slate-900">${s.mata_pelajaran}</div>
+                <div class="text-[11px] text-slate-500">${rombel.jenjang || ""} - ${rombel.nama_rombel || "-"} (${s.metode})</div>
+              </td>
+              <td class="py-3 px-3 font-semibold text-slate-800">${tutor.nama_lengkap || "-"}</td>
+              <td class="py-3 px-3">
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${statusStyles[status] || "bg-slate-100 text-slate-500"}">
+                  ${status}
+                </span>
+              </td>
+              <td class="py-3 px-3 text-right space-x-1 whitespace-nowrap">
+                <button data-tutor-att="${schedId}|${s.tutor_id}" data-status="Hadir" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-semibold">Hadir</button>
+                <button data-tutor-att="${schedId}|${s.tutor_id}" data-status="Terlambat" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-[11px] font-semibold">Terlambat</button>
+                <button data-tutor-att="${schedId}|${s.tutor_id}" data-status="Izin" class="px-2 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-lg text-[11px] font-semibold">Izin</button>
+                <button data-tutor-att="${schedId}|${s.tutor_id}" data-status="Tidak Hadir" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[11px] font-semibold">Kosong</button>
+              </td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      tbody.querySelectorAll("[data-tutor-att]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const [schedId, tutorId] = btn.dataset.tutorAtt.split("|");
+          const status = btn.dataset.status;
+          await set(ref(db, `tutor_attendances/${todayISO}/${schedId}/${tutorId}`), {
+            status,
+            catatan: `Dicatat Petugas Piket (${currentUser.nama_lengkap})`,
+            recorded_by: currentUser.uid,
+            created_at: Date.now()
+          });
+          showToast(`Kehadiran tutor dicatat: ${status}.`);
+        });
+      });
+    }
+
+    document.getElementById("monitorDayFilter").addEventListener("change", () => {
+      renderTutorMonitor();
+      populateScheduleDropdown();
+      renderStudentAttendanceList();
+    });
+
+    // =========================================================================
+    // 2. PRESENSI MANUAL & MONITORING WARGA BELAJAR
+    // =========================================================================
+    function populateScheduleDropdown() {
+      const sel = document.getElementById("piketSelectSchedule");
+      const targetDay = getSelectedMonitorDay();
+      const prev = sel.value;
+
+      const entries = Object.entries(schedulesMap)
+        .filter(([_, s]) => s.hari === targetDay)
+        .sort((a, b) => a[1].jam_mulai.localeCompare(b[1].jam_mulai));
+
+      sel.innerHTML = '<option value="">-- Pilih Jadwal Mata Pelajaran --</option>';
+      entries.forEach(([id, s]) => {
+        const r = rombelsMap[s.rombel_id] || {};
+        const opt = document.createElement("option");
+        opt.value = id;
+        opt.textContent = `[${s.jam_mulai}] ${s.mata_pelajaran} — ${r.jenjang || ""} ${r.nama_rombel || ""}`;
+        sel.appendChild(opt);
+      });
+
+      if (prev && schedulesMap[prev] && schedulesMap[prev].hari === targetDay) {
+        sel.value = prev;
+      } else if (entries.length > 0) {
+        sel.value = entries[0][0];
+      }
+    }
+
+    function renderStudentAttendanceList() {
+      const tbody = document.getElementById("piketStudentAttBody");
+      const schedId = document.getElementById("piketSelectSchedule").value;
+      const query = document.getElementById("piketSearchStudent").value.toLowerCase();
+      const todayISO = getWIBNow().dateISO;
+
+      if (!schedId || !schedulesMap[schedId]) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">Tidak ada jadwal mata pelajaran terpilih.</td></tr>';
+        return;
+      }
+
+      const targetRombelId = schedulesMap[schedId].rombel_id;
+      const students = Object.entries(usersMap)
+        .filter(([_, u]) => {
+          const isTarget = u.role === "warga_belajar" && u.rombel_id === targetRombelId && u.is_active !== false;
+          const matchQ =
+            !query ||
+            (u.nama_lengkap || "").toLowerCase().includes(query) ||
+            (u.identifier || "").toLowerCase().includes(query);
+          return isTarget && matchQ;
+        })
+        .sort((a, b) => (a[1].nama_lengkap || "").localeCompare(b[1].nama_lengkap || ""));
+
+      if (students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">Tidak ada Warga Belajar ditemukan di rombel ini.</td></tr>';
+        return;
+      }
+
+      const schedRecords = todayStudentAttMap[schedId] || {};
+      const badgeMap = {
+        Hadir: "bg-emerald-100 text-emerald-800",
+        Izin: "bg-sky-100 text-sky-800",
+        Sakit: "bg-amber-100 text-amber-800",
+        "Tanpa Keterangan": "bg-rose-100 text-rose-800"
+      };
+
+      tbody.innerHTML = students
+        .map(([uid, s]) => {
+          const rec = schedRecords[uid];
+          const status = rec ? rec.status : "Belum Absen";
+
+          return `
+            <tr class="hover:bg-slate-50/70">
+              <td class="py-2.5 px-3 font-mono font-semibold text-slate-700">${s.identifier}</td>
+              <td class="py-2.5 px-3 font-semibold text-slate-800">${s.nama_lengkap}</td>
+              <td class="py-2.5 px-3">
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${badgeMap[status] || "bg-slate-100 text-slate-500"}">
+                  ${status}
+                </span>
+              </td>
+              <td class="py-2.5 px-3 text-[11px] text-slate-500">
+                ${rec ? rec.metode_absen || "-" : "Menunggu presensi"}
+                ${rec?.bukti_url ? ` • <a href="${rec.bukti_url}" target="_blank" class="text-sky-600 underline font-semibold">Surat</a>` : ""}
+              </td>
+              <td class="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
+                <button data-piket-att="${uid}" data-status="Hadir" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-semibold">Hadir</button>
+                <button data-piket-att="${uid}" data-status="Izin" class="px-2 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-lg text-[11px] font-semibold">Izin</button>
+                <button data-piket-att="${uid}" data-status="Sakit" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-[11px] font-semibold">Sakit</button>
+                <button data-piket-att="${uid}" data-status="Tanpa Keterangan" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[11px] font-semibold">Alfa</button>
+              </td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      tbody.querySelectorAll("[data-piket-att]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const siswaId = btn.dataset.piketAtt;
+          const status = btn.dataset.status;
+          await set(ref(db, `attendances/${todayISO}/${schedId}/${siswaId}`), {
+            status,
+            metode_absen: "Manual Piket",
+            recorded_by: currentUser.uid,
+            created_at: Date.now()
+          });
+          showToast(`Presensi ${usersMap[siswaId]?.nama_lengkap} dicatat: ${status}.`);
+        });
+      });
+    }
+
+    document.getElementById("piketSelectSchedule").addEventListener("change", renderStudentAttendanceList);
+    document.getElementById("piketSearchStudent").addEventListener("input", renderStudentAttendanceList);
+
+    // =========================================================================
+    // 3. RESET PASSWORD CEPAT DI TEMPAT
+    // =========================================================================
+    function renderResetUsersTable() {
+      const tbody = document.getElementById("resetUsersTableBody");
+      const query = document.getElementById("resetSearchInput").value.toLowerCase();
+      const roleFilter = document.getElementById("resetRoleFilter").value;
+
+      const entries = Object.entries(usersMap)
+        .filter(([_, u]) => {
+          if (u.role === "pengelola" || u.role === "piket") return false;
+          const matchRole = roleFilter === "ALL" || u.role === roleFilter;
+          const matchQ =
+            !query ||
+            (u.nama_lengkap || "").toLowerCase().includes(query) ||
+            (u.identifier || "").toLowerCase().includes(query);
+          return matchRole && matchQ;
+        })
+        .sort((a, b) => (a[1].nama_lengkap || "").localeCompare(b[1].nama_lengkap || ""));
+
+      if (entries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-slate-400">Tidak ada data pengguna sesuai pencarian.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = entries
+        .map(([uid, u]) => {
+          const r = rombelsMap[u.rombel_id];
+          const label =
+            u.role === "warga_belajar"
+              ? `Warga Belajar • ${r ? `${r.jenjang} ${r.nama_rombel}` : "-"}`
+              : "Tutor Pengajar";
+
+          return `
+            <tr class="hover:bg-slate-50/70">
+              <td class="py-3 px-3 font-mono font-semibold text-slate-700">${u.identifier}</td>
+              <td class="py-3 px-3 font-semibold text-slate-800">${u.nama_lengkap}</td>
+              <td class="py-3 px-3 text-slate-500">${label}</td>
+              <td class="py-3 px-3 text-right">
+                <button
+                  data-quick-reset="${uid}"
+                  class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-[11px] font-bold transition"
+                >
+                  Reset Password ke Default
+                </button>
+              </td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      tbody.querySelectorAll("[data-quick-reset]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const uid = btn.dataset.quickReset;
+          const u = usersMap[uid];
+          const defaultPw = appSettings.default_password || "pkbm1234";
+
+          if (!confirm(`Reset kata sandi ${u.nama_lengkap} (${u.identifier}) menjadi "${defaultPw}"?`)) return;
+
+          btn.disabled = true;
+          try {
+            if (u.saved_pw) {
+              const email = toLoginEmail(u.identifier);
+              const secCred = await signInWithEmailAndPassword(secondaryAuth, email, u.saved_pw);
+              await updatePassword(secCred.user, defaultPw);
+              await signOut(secondaryAuth);
+            }
+            await update(ref(db, `users/${uid}`), { saved_pw: defaultPw });
+            showToast(`Sandi ${u.nama_lengkap} berhasil direset ke "${defaultPw}".`);
+          } catch (err) {
+            alert("Gagal mereset sandi: " + err.message);
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      });
+    }
+
+    document.getElementById("resetSearchInput").addEventListener("input", renderResetUsersTable);
+    document.getElementById("resetRoleFilter").addEventListener("change", renderResetUsersTable);
+
+    // =========================================================================
+    // 4. JURNAL HARIAN PIKET & HARI LIBUR DARURAT
+    // =========================================================================
+    document.getElementById("journalForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const wib = getWIBNow();
+      await push(ref(db, "picket_journals"), {
+        tanggal: wib.dateISO,
+        hari: wib.dayName,
+        petugas_id: currentUser.uid,
+        petugas_nama: currentUser.nama_lengkap,
+        kategori: document.getElementById("journalKategori").value,
+        deskripsi: document.getElementById("journalDeskripsi").value.trim(),
+        created_at: Date.now()
+      });
+      document.getElementById("journalDeskripsi").value = "";
+      showToast("Laporan jurnal piket berhasil disimpan.");
+    });
+
+    function renderPicketJournals(journalsObj) {
+      const container = document.getElementById("picketJournalHistory");
+      const entries = Object.entries(journalsObj).sort((a, b) => (b[1].created_at || 0) - (a[1].created_at || 0));
+
+      if (entries.length === 0) {
+        container.innerHTML = '<p class="text-slate-400">Belum ada catatan jurnal piket.</p>';
+        return;
+      }
+
+      container.innerHTML = entries
+        .map(([id, j]) => `
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-start justify-between gap-2">
+            <div>
+              <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+                <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">${j.kategori}</span>
+                <span class="text-slate-500">${j.hari}, ${j.tanggal} • ${j.petugas_nama || "Piket"}</span>
+              </div>
+              <p class="text-slate-800 mt-1.5">${j.deskripsi}</p>
+            </div>
+            ${
+              j.petugas_id === currentUser.uid
+                ? `<button data-del-journal="${id}" class="text-rose-600 hover:text-rose-800 text-[11px] font-semibold shrink-0">Hapus</button>`
+                : ""
+            }
+          </div>
+        `)
+        .join("");
+
+      container.querySelectorAll("[data-del-journal]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          await remove(ref(db, `picket_journals/${btn.dataset.delJournal}`));
+          showToast("Catatan jurnal dihapus.");
+        });
+      });
+    }
+
+    // Tombol Cepat Hari Libur Darurat
+    document.getElementById("quickEmergencyHolidayBtn").addEventListener("click", async () => {
+      const wib = getWIBNow();
+      const ket = prompt(
+        `Tetapkan hari ini (${wib.formattedDate}) sebagai HARI LIBUR DARURAT? Masukkan alasan:`,
+        "Libur Darurat - Situasi Mendesak"
+      );
+      if (!ket) return;
+      await set(ref(db, `holidays/${wib.dateISO}`), {
+        tanggal: wib.dateISO,
+        keterangan: ket.trim(),
+        created_by: currentUser.uid,
+        created_at: Date.now()
+      });
+      showToast("Hari ini ditetapkan sebagai Hari Libur Darurat.");
+    });
+
+    document.getElementById("holidayForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const tanggal = document.getElementById("holidayDate").value;
+      const keterangan = document.getElementById("holidayDesc").value.trim();
+      if (!tanggal || !keterangan) return;
+
+      await set(ref(db, `holidays/${tanggal}`), {
+        tanggal,
+        keterangan,
+        created_by: currentUser.uid,
+        created_at: Date.now()
+      });
+      document.getElementById("holidayDesc").value = "";
+      showToast("Tanggal libur disimpan.");
+    });
+
+    function renderHolidays(holidaysObj) {
+      const list = document.getElementById("holidayList");
+      const entries = Object.entries(holidaysObj).sort((a, b) => b[0].localeCompare(a[0]));
+      if (entries.length === 0) {
+        list.innerHTML = '<p class="text-slate-400">Belum ada tanggal libur diatur.</p>';
+        return;
+      }
+      list.innerHTML = entries
+        .map(([tgl, h]) => `
+          <div class="flex items-center justify-between bg-amber-50/70 border border-amber-200 px-3 py-2.5 rounded-xl">
+            <div>
+              <span class="font-bold text-amber-900">${tgl}</span>
+              <p class="text-slate-700 mt-0.5">${h.keterangan}</p>
+            </div>
+            <button data-del-holiday="${tgl}" class="text-rose-600 hover:text-rose-800 font-semibold px-2 py-1">Hapus</button>
+          </div>
+        `)
+        .join("");
+
+      list.querySelectorAll("[data-del-holiday]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          await remove(ref(db, `holidays/${btn.dataset.delHoliday}`));
+          showToast("Tanggal libur dihapus.");
+        });
+      });
+    }
+  </script>
+</body>
+</html>
