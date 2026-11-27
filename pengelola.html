@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Pengelola - LMS PKBM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 pb-20 md:pb-8">
+
+  <!-- Top Navbar -->
+  <header class="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 overflow-hidden p-1">
+          <img id="navLogoImg" src="" alt="Logo" class="w-full h-full object-contain hidden bg-white rounded-lg" />
+          <i id="navLogoFallback" data-lucide="shield-check" class="w-6 h-6"></i>
+        </div>
+        <div class="min-w-0">
+          <h1 id="navPkbmName" class="text-sm sm:text-base font-bold text-slate-900 truncate">LMS PKBM</h1>
+          <p class="text-[11px] text-emerald-700 font-medium truncate">
+            Panel Pengelola • <span id="navUserName">Admin</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div class="hidden sm:flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-full text-xs font-semibold">
+          <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-600"></i>
+          <span id="headerWibClock">--:-- WIB</span>
+        </div>
+        <button
+          id="logoutBtn"
+          class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold border border-rose-200 transition"
+        >
+          <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+          <span>Keluar</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Desktop Tab Navigation -->
+    <nav class="hidden md:block bg-slate-50/80 border-t border-slate-200">
+      <div class="max-w-7xl mx-auto px-4 flex gap-1">
+        <button data-tab="monitoring" class="tab-btn active-tab px-4 py-3 text-xs font-semibold border-b-2 border-emerald-600 text-emerald-700 flex items-center gap-2">
+          <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Monitoring & Rekap
+        </button>
+        <button data-tab="master" class="tab-btn px-4 py-3 text-xs font-semibold border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2">
+          <i data-lucide="users" class="w-4 h-4"></i> Warga Belajar, Tutor & Rombel
+        </button>
+        <button data-tab="jadwal" class="tab-btn px-4 py-3 text-xs font-semibold border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2">
+          <i data-lucide="calendar-range" class="w-4 h-4"></i> Jadwal Jumat–Sabtu
+        </button>
+        <button data-tab="libur" class="tab-btn px-4 py-3 text-xs font-semibold border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2">
+          <i data-lucide="megaphone" class="w-4 h-4"></i> Hari Libur & Pengumuman
+        </button>
+        <button data-tab="pengaturan" class="tab-btn px-4 py-3 text-xs font-semibold border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2">
+          <i data-lucide="settings" class="w-4 h-4"></i> Pengaturan Web
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Kontainer Utama -->
+  <main class="max-w-7xl mx-auto px-4 pt-5 space-y-5">
+
+    <!-- Banner Pengumuman Aktif (Tampil di Semua Role) -->
+    <section id="announcementBannerContainer" class="hidden space-y-2"></section>
+
+    <!-- Notifikasi Toast -->
+    <div id="toastBox" class="hidden fixed bottom-20 md:bottom-6 right-4 z-50 max-w-sm bg-slate-900 text-white text-xs font-medium px-4 py-3 rounded-2xl shadow-lg flex items-center gap-2.5">
+      <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+      <span id="toastText">Berhasil disimpan</span>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- TAB 1: MONITORING & REKAP KEHADIRAN                                 -->
+    <!-- =================================================================== -->
+    <section id="tab-monitoring" class="tab-panel space-y-5">
+      <!-- Kartu Statistik Ringkas -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium text-slate-500">Warga Belajar</span>
+            <span class="p-2 bg-emerald-50 text-emerald-600 rounded-xl"><i data-lucide="graduation-cap" class="w-4 h-4"></i></span>
+          </div>
+          <p id="statTotalSiswa" class="text-2xl font-bold text-slate-900 mt-2">0</p>
+          <p id="statPaketBreakdown" class="text-[11px] text-slate-500 mt-1">Paket A: 0 • B: 0 • C: 0</p>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium text-slate-500">Tutor & Piket</span>
+            <span class="p-2 bg-sky-50 text-sky-600 rounded-xl"><i data-lucide="user-check" class="w-4 h-4"></i></span>
+          </div>
+          <p id="statTotalStaff" class="text-2xl font-bold text-slate-900 mt-2">0</p>
+          <p id="statStaffBreakdown" class="text-[11px] text-slate-500 mt-1">Tutor: 0 • Piket: 0</p>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium text-slate-500">Token Absen Hari Ini</span>
+            <span class="p-2 bg-amber-50 text-amber-600 rounded-xl"><i data-lucide="key-round" class="w-4 h-4"></i></span>
+          </div>
+          <p id="statTodayToken" class="text-2xl font-mono font-bold text-amber-600 mt-2">----</p>
+          <p id="statTodayDateLabel" class="text-[11px] text-slate-500 mt-1">Zona WIB</p>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium text-slate-500">Presensi Tercatat</span>
+            <span class="p-2 bg-teal-50 text-teal-600 rounded-xl"><i data-lucide="clipboard-check" class="w-4 h-4"></i></span>
+          </div>
+          <p id="statTodayAttendance" class="text-2xl font-bold text-slate-900 mt-2">0</p>
+          <p class="text-[11px] text-slate-500 mt-1">Total entri presensi hari ini</p>
+        </div>
+      </div>
+
+      <!-- Filter & Download Rekap Excel / CSV -->
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Rekap Kehadiran Warga Belajar</h2>
+            <p class="text-xs text-slate-500">Filter berdasarkan bulan/tanggal & rombel, lalu unduh format Excel (CSV).</p>
+          </div>
+          <button
+            id="exportCsvBtn"
+            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition"
+          >
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+            <span>Unduh Rekap Excel (.CSV)</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Filter Bulan (YYYY-MM)</label>
+            <input type="month" id="filterRecapMonth" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Filter Rombel / Paket</label>
+            <select id="filterRecapRombel" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl">
+              <option value="ALL">Semua Rombel (Paket A, B, C)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Filter Status</label>
+            <select id="filterRecapStatus" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl">
+              <option value="ALL">Semua Status</option>
+              <option value="Hadir">Hadir</option>
+              <option value="Izin">Izin</option>
+              <option value="Sakit">Sakit</option>
+              <option value="Tanpa Keterangan">Tanpa Keterangan</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-3">Tanggal (WIB)</th>
+                <th class="py-3 px-3">Warga Belajar</th>
+                <th class="py-3 px-3">Paket / Rombel</th>
+                <th class="py-3 px-3">Mata Pelajaran</th>
+                <th class="py-3 px-3">Status</th>
+                <th class="py-3 px-3">Metode</th>
+              </tr>
+            </thead>
+            <tbody id="recapTableBody" class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="6" class="py-6 text-center text-slate-400">Belum ada data kehadiran pada periode ini.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Laporan Jurnal Petugas Piket -->
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <i data-lucide="notebook-pen" class="w-4 h-4 text-amber-600"></i>
+          Laporan Jurnal Petugas Piket Terbaru
+        </h3>
+        <div id="picketJournalList" class="space-y-2 text-xs">
+          <p class="text-slate-400">Belum ada catatan jurnal piket.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 2: MANAJEMEN MASTER DATA (ROMBEL & AKUN PENGGUNA)               -->
+    <!-- =================================================================== -->
+    <section id="tab-master" class="tab-panel hidden space-y-5">
+      <!-- Bagian A: Manajemen Rombel (Paket A, B, C) -->
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">1. Rombongan Belajar (Paket A, B, C)</h2>
+          <p class="text-xs text-slate-500">Buat daftar kelas/rombel terlebih dahulu sebelum mendaftarkan Warga Belajar dan jadwal.</p>
+        </div>
+
+        <form id="rombelForm" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <select id="rombelJenjang" required class="px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium">
+            <option value="Paket A">Paket A (Setara SD)</option>
+            <option value="Paket B">Paket B (Setara SMP)</option>
+            <option value="Paket C" selected>Paket C (Setara SMA)</option>
+          </select>
+          <input
+            type="text"
+            id="rombelNama"
+            required
+            placeholder="Nama Rombel (Contoh: Kelas 12 - IPS)"
+            class="px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl"
+          />
+          <button type="submit" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5">
+            <i data-lucide="plus" class="w-4 h-4"></i> Tambah Rombel
+          </button>
+        </form>
+
+        <div id="rombelList" class="flex flex-wrap gap-2 pt-1"></div>
+      </div>
+
+      <!-- Bagian B: Manajemen Akun Pengguna -->
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">2. Manajemen Akun Pengguna</h2>
+            <p class="text-xs text-slate-500">Tambah, ubah, nonaktifkan, atau reset sandi Warga Belajar, Tutor, dan Petugas Piket.</p>
+          </div>
+        </div>
+
+        <!-- Form Tambah / Edit Akun -->
+        <form id="userForm" class="bg-slate-50 p-4 rounded-2xl border border-slate-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <input type="hidden" id="editUserId" />
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Peran (Role)</label>
+            <select id="userRole" required class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl">
+              <option value="warga_belajar">Warga Belajar (Siswa)</option>
+              <option value="tutor">Tutor (Pengajar)</option>
+              <option value="piket">Petugas Piket</option>
+              <option value="pengelola">Pengelola (Admin)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Username / NISN / NIP</label>
+            <input type="text" id="userIdentifier" required placeholder="Tanpa spasi, misal: 0081234567" class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Nama Lengkap</label>
+            <input type="text" id="userNama" required placeholder="Nama lengkap sesuai data PKBM" class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl" />
+          </div>
+
+          <div id="userRombelWrapper">
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Rombel (Khusus Warga Belajar)</label>
+            <select id="userRombel" class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl">
+              <option value="">-- Pilih Rombel --</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">No. WhatsApp (Opsional)</label>
+            <input type="text" id="userHp" placeholder="08xxxxxxxxxx" class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl" />
+          </div>
+
+          <div id="userPasswordWrapper">
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Kata Sandi Awal (Kosongkan = Default)</label>
+            <input type="text" id="userPassword" placeholder="Otomatis pakai sandi default" class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl" />
+          </div>
+
+          <div class="sm:col-span-2 lg:col-span-3 flex flex-wrap items-center gap-2 pt-1">
+            <button type="submit" id="saveUserBtn" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5">
+              <i data-lucide="user-plus" class="w-4 h-4"></i>
+              <span id="saveUserBtnText">Simpan Akun Baru</span>
+            </button>
+            <button type="button" id="cancelEditUserBtn" class="hidden px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-xl">
+              Batal Edit
+            </button>
+          </div>
+        </form>
+
+        <!-- Filter & Pencarian Akun -->
+        <div class="flex flex-col sm:flex-row gap-3">
+          <input
+            type="text"
+            id="searchUserInput"
+            placeholder="Cari nama atau NISN/NIP..."
+            class="flex-1 px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl"
+          />
+          <select id="filterUserRole" class="px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl">
+            <option value="ALL">Semua Role</option>
+            <option value="warga_belajar">Warga Belajar</option>
+            <option value="tutor">Tutor</option>
+            <option value="piket">Petugas Piket</option>
+            <option value="pengelola">Pengelola</option>
+          </select>
+        </div>
+
+        <!-- Tabel Daftar Pengguna -->
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-3">ID Login</th>
+                <th class="py-3 px-3">Nama Lengkap</th>
+                <th class="py-3 px-3">Role / Rombel</th>
+                <th class="py-3 px-3">Status</th>
+                <th class="py-3 px-3 text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 3: MANAJEMEN JADWAL JUMAT - SABTU                               -->
+    <!-- =================================================================== -->
+    <section id="tab-jadwal" class="tab-panel hidden space-y-5">
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Pengaturan Jadwal Khusus Jumat & Sabtu</h2>
+          <p class="text-xs text-slate-500">Pisahkan mata pelajaran hari Jumat dan Sabtu lengkap dengan metode Tatap Muka atau Daring/Mandiri.</p>
+        </div>
+
+        <form id="scheduleForm" class="bg-slate-50 p-4 rounded-2xl border border-slate-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <input type="hidden" id="editScheduleId" />
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Hari Belajar</label>
+            <select id="schedHari" required class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl font-semibold text-emerald-700">
+              <option value="Jumat">Jumat</option>
+              <option value="Sabtu">Sabtu</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Paket / Rombel</label>
+            <select id="schedRombel" required class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl">
+              <option value="">-- Pilih Rombel --</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Mata Pelajaran</label>
+            <input type="text" id="schedMapel" required placeholder="Contoh: Ekonomi / Sejarah" class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Tutor Pengampu</label>
+            <select id="schedTutor" required class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl">
+              <option value="">-- Pilih Tutor --</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Sesi Waktu</label>
+            <select id="schedSesi" required class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl">
+              <option value="Pagi">Pagi</option>
+              <option value="Siang">Siang</option>
+              <option value="Sore/Malam">Sore/Malam</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Jam Mulai (WIB)</label>
+            <input type="time" id="schedMulai" required value="08:00" class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Jam Selesai (WIB)</label>
+            <input type="time" id="schedSelesai" required value="09:30" class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Metode Belajar</label>
+            <select id="schedMetode" required class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl">
+              <option value="Tatap Muka">Tatap Muka (Wajib Token 4 Digit)</option>
+              <option value="Daring/Mandiri">Daring/Mandiri</option>
+            </select>
+          </div>
+
+          <div class="sm:col-span-2 lg:col-span-4 flex items-center gap-2 pt-1">
+            <button type="submit" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5">
+              <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+              <span id="saveSchedBtnText">Simpan Jadwal</span>
+            </button>
+            <button type="button" id="cancelEditSchedBtn" class="hidden px-4 py-2.5 bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">
+              Batal
+            </button>
+          </div>
+        </form>
+
+        <!-- Filter Jadwal -->
+        <div class="flex flex-wrap gap-2">
+          <select id="filterSchedHari" class="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl">
+            <option value="ALL">Semua Hari (Jumat & Sabtu)</option>
+            <option value="Jumat">Khusus Hari Jumat</option>
+            <option value="Sabtu">Khusus Hari Sabtu</option>
+          </select>
+          <select id="filterSchedRombel" class="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl">
+            <option value="ALL">Semua Rombel</option>
+          </select>
+        </div>
+
+        <!-- Tabel Jadwal -->
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-3">Hari & Jam (WIB)</th>
+                <th class="py-3 px-3">Rombel</th>
+                <th class="py-3 px-3">Mata Pelajaran</th>
+                <th class="py-3 px-3">Tutor</th>
+                <th class="py-3 px-3">Metode</th>
+                <th class="py-3 px-3 text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="schedulesTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 4: HARI LIBUR & BANNER PENGUMUMAN                               -->
+    <!-- =================================================================== -->
+    <section id="tab-libur" class="tab-panel hidden grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <!-- Set Hari Libur -->
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Set Hari Libur (Jumat / Sabtu)</h2>
+            <p class="text-xs text-slate-500">Menonaktifkan absensi pada tanggal libur agar tidak mengurangi persentase kehadiran siswa.</p>
+          </div>
+          <button
+            type="button"
+            id="quickTodayHolidayBtn"
+            class="shrink-0 px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] font-bold rounded-xl transition"
+          >
+            Set Hari Ini Libur
+          </button>
+        </div>
+
+        <form id="holidayForm" class="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Pilih Tanggal Libur</label>
+            <input type="date" id="holidayDate" required class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Keterangan Libur</label>
+            <input type="text" id="holidayDesc" required placeholder="Contoh: Libur Nasional / Kegiatan Lembaga" class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl" />
+          </div>
+          <button type="submit" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-xl">
+            Simpan Tanggal Libur
+          </button>
+        </form>
+
+        <div id="holidayList" class="space-y-2 text-xs"></div>
+      </div>
+
+      <!-- Banner Papan Pengumuman -->
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Banner Papan Pengumuman</h2>
+          <p class="text-xs text-slate-500">Pengumuman aktif tampil di bagian atas dashboard Pengelola, Tutor, Piket, dan Warga Belajar.</p>
+        </div>
+
+        <form id="announcementForm" class="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Judul Pengumuman</label>
+            <input type="text" id="annJudul" required placeholder="Contoh: Jadwal Ujian Modul Semester Ganjil" class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Isi Pengumuman</label>
+            <textarea id="annIsi" rows="2" required placeholder="Tulis informasi singkat dan jelas..." class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl"></textarea>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Warna / Prioritas Banner</label>
+            <select id="annTipe" class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl">
+              <option value="info">Informasi Umum (Hijau / Biru)</option>
+              <option value="penting">Penting / Mendesak (Merah)</option>
+              <option value="libur">Pemberitahuan Libur (Kuning)</option>
+            </select>
+          </div>
+          <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl">
+            Terbitkan Pengumuman
+          </button>
+        </form>
+
+        <div id="announcementAdminList" class="space-y-2 text-xs"></div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 5: PENGATURAN IDENTITAS WEB & AKUN DEFAULT                      -->
+    <!-- =================================================================== -->
+    <section id="tab-pengaturan" class="tab-panel hidden max-w-2xl">
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Pengaturan Identitas PKBM & Halaman Login</h2>
+          <p class="text-xs text-slate-500">Perubahan langsung tampil di halaman login depan secara real-time.</p>
+        </div>
+
+        <form id="settingsForm" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lembaga PKBM</label>
+            <input type="text" id="setNamaPkbm" required class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">URL Logo PKBM (Link Gambar PNG/JPG/SVG)</label>
+            <input type="url" id="setLogoUrl" placeholder="https://..." class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Tahun Ajaran Aktif</label>
+            <input type="text" id="setTahunAjaran" required placeholder="2026/2027 - Semester Ganjil" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl" />
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Nomor WhatsApp Bantuan Login</label>
+              <input type="text" id="setWaAdmin" required placeholder="6281234567890" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Kata Sandi Default Reset Akun</label>
+              <input type="text" id="setDefaultPw" required placeholder="pkbm1234" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Template Pesan Bantuan WhatsApp</label>
+            <input type="text" id="setWaTemplate" required class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl" />
+          </div>
+
+          <button type="submit" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs">
+            Simpan Pengaturan Web
+          </button>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 grid grid-cols-5 text-[10px] font-semibold text-slate-500">
+    <button data-tab="monitoring" class="tab-btn-mobile py-2.5 flex flex-col items-center gap-1 text-emerald-600">
+      <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Rekap
+    </button>
+    <button data-tab="master" class="tab-btn-mobile py-2.5 flex flex-col items-center gap-1">
+      <i data-lucide="users" class="w-4 h-4"></i> Akun
+    </button>
+    <button data-tab="jadwal" class="tab-btn-mobile py-2.5 flex flex-col items-center gap-1">
+      <i data-lucide="calendar-range" class="w-4 h-4"></i> Jadwal
+    </button>
+    <button data-tab="libur" class="tab-btn-mobile py-2.5 flex flex-col items-center gap-1">
+      <i data-lucide="megaphone" class="w-4 h-4"></i> Info
+    </button>
+    <button data-tab="pengaturan" class="tab-btn-mobile py-2.5 flex flex-col items-center gap-1">
+      <i data-lucide="settings" class="w-4 h-4"></i> Web
+    </button>
+  </nav>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      updatePassword
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import {
+      ref,
+      get,
+      set,
+      push,
+      update,
+      remove,
+      onValue
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+    import {
+      firebaseConfig,
+      auth,
+      db,
+      toLoginEmail,
+      getWIBNow,
+      getPageByRole
+    } from "./config.js";
+
+    // Secondary Firebase App agar pembuatan/reset akun tidak mengeluarkan sesi Pengelola
+    const secondaryApp = initializeApp(firebaseConfig, "SecondaryAdminWorker");
+    const secondaryAuth = getAuth(secondaryApp);
+
+    lucide.createIcons();
+
+    // State Global
+    let currentUser = null;
+    let appSettings = {
+      nama_pkbm: "PKBM",
+      logo_url: "",
+      tahun_ajaran: "2026/2027",
+      wa_admin: "6281234567890",
+      wa_template: "Halo Admin PKBM, saya butuh bantuan login LMS",
+      default_password: "pkbm1234"
+    };
+    let rombelsMap = {};
+    let usersMap = {};
+    let schedulesMap = {};
+    let attendancesMap = {};
+
+    // Helper Toast
+    function showToast(msg) {
+      const box = document.getElementById("toastBox");
+      document.getElementById("toastText").textContent = msg;
+      box.classList.remove("hidden");
+      setTimeout(() => box.classList.add("hidden"), 3200);
+    }
+
+    // Jam WIB Real-Time di Header
+    function updateClock() {
+      const wib = getWIBNow();
+      document.getElementById("headerWibClock").textContent = `${wib.dayName}, ${wib.timeShort} WIB`;
+      document.getElementById("statTodayDateLabel").textContent = `${wib.dayName}, ${wib.dateISO}`;
+    }
+    updateClock();
+    setInterval(updateClock, 15000);
+
+    // Set default filter bulan ke bulan WIB berjalan
+    const initialWib = getWIBNow();
+    document.getElementById("filterRecapMonth").value = initialWib.dateISO.slice(0, 7);
+    document.getElementById("holidayDate").value = initialWib.dateISO;
+
+    // Navigasi Tab Responsif (Desktop & Mobile)
+    function switchTab(tabName) {
+      document.querySelectorAll(".tab-panel").forEach((el) => el.classList.add("hidden"));
+      document.getElementById(`tab-${tabName}`).classList.remove("hidden");
+
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        const active = btn.dataset.tab === tabName;
+        btn.classList.toggle("border-emerald-600", active);
+        btn.classList.toggle("text-emerald-700", active);
+        btn.classList.toggle("border-transparent", !active);
+        btn.classList.toggle("text-slate-600", !active);
+      });
+
+      document.querySelectorAll(".tab-btn-mobile").forEach((btn) => {
+        const active = btn.dataset.tab === tabName;
+        btn.classList.toggle("text-emerald-600", active);
+      });
+    }
+
+    document.querySelectorAll(".tab-btn, .tab-btn-mobile").forEach((btn) => {
+      btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+    });
+
+    // Logout
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "index.html";
+    });
+
+    // Cek Autentikasi & Role Pengelola
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+      const snap = await get(ref(db, `users/${user.uid}`));
+      if (!snap.exists() || snap.val().role !== "pengelola") {
+        window.location.href = snap.exists() ? getPageByRole(snap.val().role) : "index.html";
+        return;
+      }
+      currentUser = { uid: user.uid, ...snap.val() };
+      document.getElementById("navUserName").textContent = currentUser.nama_lengkap;
+      initListeners();
+    });
+
+    // Pastikan Token Harian (4 Digit) untuk Hari Ini Tersedia
+    async function ensureDailyToken() {
+      const { dateISO } = getWIBNow();
+      const tokenRef = ref(db, `daily_tokens/${dateISO}`);
+      const snap = await get(tokenRef);
+      if (snap.exists()) {
+        document.getElementById("statTodayToken").textContent = snap.val().token_code;
+      } else {
+        const code = String(Math.floor(1000 + Math.random() * 9000));
+        await set(tokenRef, { token_code: code, created_at: Date.now() });
+        document.getElementById("statTodayToken").textContent = code;
+      }
+    }
+
+    function initListeners() {
+      ensureDailyToken();
+
+      // 1. Settings Listener
+      onValue(ref(db, "settings"), (snap) => {
+        if (snap.exists()) {
+          appSettings = { ...appSettings, ...snap.val() };
+          document.getElementById("navPkbmName").textContent = appSettings.nama_pkbm;
+          document.getElementById("setNamaPkbm").value = appSettings.nama_pkbm || "";
+          document.getElementById("setLogoUrl").value = appSettings.logo_url || "";
+          document.getElementById("setTahunAjaran").value = appSettings.tahun_ajaran || "";
+          document.getElementById("setWaAdmin").value = appSettings.wa_admin || "";
+          document.getElementById("setWaTemplate").value = appSettings.wa_template || "";
+          document.getElementById("setDefaultPw").value = appSettings.default_password || "pkbm1234";
+
+          if (appSettings.logo_url) {
+            const img = document.getElementById("navLogoImg");
+            img.src = appSettings.logo_url;
+            img.classList.remove("hidden");
+            document.getElementById("navLogoFallback").classList.add("hidden");
+          }
+        }
+      });
+
+      // 2. Rombels Listener
+      onValue(ref(db, "rombels"), (snap) => {
+        rombelsMap = snap.val() || {};
+        renderRombels();
+        renderSchedules();
+        renderRecapTable();
+      });
+
+      // 3. Users Listener
+      onValue(ref(db, "users"), (snap) => {
+        usersMap = snap.val() || {};
+        updateUserStats();
+        renderUsersTable();
+        populateTutorSelect();
+        renderRecapTable();
+      });
+
+      // 4. Schedules Listener
+      onValue(ref(db, "schedules"), (snap) => {
+        schedulesMap = snap.val() || {};
+        renderSchedules();
+        renderRecapTable();
+      });
+
+      // 5. Attendances Listener
+      onValue(ref(db, "attendances"), (snap) => {
+        attendancesMap = snap.val() || {};
+        renderRecapTable();
+      });
+
+      // 6. Holidays Listener
+      onValue(ref(db, "holidays"), (snap) => {
+        renderHolidays(snap.val() || {});
+      });
+
+      // 7. Announcements Listener
+      onValue(ref(db, "announcements"), (snap) => {
+        renderAnnouncements(snap.val() || {});
+      });
+
+      // 8. Picket Journals Listener
+      onValue(ref(db, "picket_journals"), (snap) => {
+        renderPicketJournals(snap.val() || {});
+      });
+    }
+
+    // =========================================================================
+    // LOGIKA ROMBEL (PAKET A, B, C)
+    // =========================================================================
+    document.getElementById("rombelForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const jenjang = document.getElementById("rombelJenjang").value;
+      const nama_rombel = document.getElementById("rombelNama").value.trim();
+      if (!nama_rombel) return;
+
+      await push(ref(db, "rombels"), {
+        jenjang,
+        nama_rombel,
+        created_at: Date.now()
+      });
+      document.getElementById("rombelNama").value = "";
+      showToast("Rombel berhasil ditambahkan.");
+    });
+
+    function renderRombels() {
+      const container = document.getElementById("rombelList");
+      const selects = [
+        document.getElementById("userRombel"),
+        document.getElementById("schedRombel"),
+        document.getElementById("filterSchedRombel"),
+        document.getElementById("filterRecapRombel")
+      ];
+
+      container.innerHTML = "";
+      selects.forEach((sel, idx) => {
+        const currentVal = sel.value;
+        sel.innerHTML = idx >= 2
+          ? '<option value="ALL">Semua Rombel (Paket A, B, C)</option>'
+          : '<option value="">-- Pilih Rombel --</option>';
+
+        Object.entries(rombelsMap).forEach(([id, r]) => {
+          const opt = document.createElement("option");
+          opt.value = id;
+          opt.textContent = `${r.jenjang} - ${r.nama_rombel}`;
+          sel.appendChild(opt);
+        });
+        sel.value = currentVal;
+      });
+
+      const entries = Object.entries(rombelsMap);
+      if (entries.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-400">Belum ada rombel terdaftar.</p>';
+        return;
+      }
+
+      entries.forEach(([id, r]) => {
+        const badge = document.createElement("div");
+        badge.className = "inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-900 px-3 py-1.5 rounded-xl text-xs font-medium";
+        badge.innerHTML = `
+          <span class="font-bold text-emerald-700">${r.jenjang}</span>
+          <span>${r.nama_rombel}</span>
+          <button data-del-rombel="${id}" class="text-rose-500 hover:text-rose-700 ml-1" title="Hapus Rombel">×</button>
+        `;
+        container.appendChild(badge);
+      });
+
+      container.querySelectorAll("[data-del-rombel]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          if (confirm("Hapus rombel ini?")) {
+            await remove(ref(db, `rombels/${btn.dataset.delRombel}`));
+            showToast("Rombel dihapus.");
+          }
+        });
+      });
+    }
+
+    // =========================================================================
+    // LOGIKA CRUD PENGGUNA & RESET PASSWORD
+    // =========================================================================
+    document.getElementById("userRole").addEventListener("change", (e) => {
+      const isSiswa = e.target.value === "warga_belajar";
+      document.getElementById("userRombelWrapper").classList.toggle("opacity-50", !isSiswa);
+    });
+
+    function resetUserForm() {
+      document.getElementById("userForm").reset();
+      document.getElementById("editUserId").value = "";
+      document.getElementById("userIdentifier").disabled = false;
+      document.getElementById("saveUserBtnText").textContent = "Simpan Akun Baru";
+      document.getElementById("cancelEditUserBtn").classList.add("hidden");
+    }
+
+    document.getElementById("cancelEditUserBtn").addEventListener("click", resetUserForm);
+
+    document.getElementById("userForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const editId = document.getElementById("editUserId").value;
+      const role = document.getElementById("userRole").value;
+      const identifier = document.getElementById("userIdentifier").value.trim().toLowerCase();
+      const nama_lengkap = document.getElementById("userNama").value.trim();
+      const rombel_id = role === "warga_belajar" ? document.getElementById("userRombel").value : "";
+      const no_hp = document.getElementById("userHp").value.trim();
+      const rawPw = document.getElementById("userPassword").value.trim();
+      const finalPw = rawPw || appSettings.default_password || "pkbm1234";
+
+      const btn = document.getElementById("saveUserBtn");
+      btn.disabled = true;
+
+      try {
+        if (!editId) {
+          // Buat akun baru di Firebase Auth menggunakan Secondary App
+          const email = toLoginEmail(identifier);
+          const cred = await createUserWithEmailAndPassword(secondaryAuth, email, finalPw);
+          const newUid = cred.user.uid;
+          await signOut(secondaryAuth);
+
+          await set(ref(db, `users/${newUid}`), {
+            identifier,
+            nama_lengkap,
+            role,
+            rombel_id,
+            no_hp,
+            saved_pw: finalPw,
+            is_active: true,
+            created_at: Date.now()
+          });
+          showToast(`Akun ${nama_lengkap} berhasil dibuat (Sandi: ${finalPw}).`);
+        } else {
+          // Update profil di database
+          const updates = {
+            nama_lengkap,
+            role,
+            rombel_id,
+            no_hp
+          };
+          if (rawPw && usersMap[editId]?.saved_pw) {
+            try {
+              const email = toLoginEmail(usersMap[editId].identifier);
+              const secCred = await signInWithEmailAndPassword(secondaryAuth, email, usersMap[editId].saved_pw);
+              await updatePassword(secCred.user, rawPw);
+              await signOut(secondaryAuth);
+              updates.saved_pw = rawPw;
+            } catch (pwErr) {
+              console.warn("Sinkronisasi sandi Auth dilewati:", pwErr);
+            }
+          }
+          await update(ref(db, `users/${editId}`), updates);
+          showToast("Data pengguna diperbarui.");
+        }
+        resetUserForm();
+      } catch (err) {
+        alert("Gagal menyimpan akun: " + (err.message || err));
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    function updateUserStats() {
+      const list = Object.values(usersMap);
+      const siswa = list.filter((u) => u.role === "warga_belajar");
+      const tutor = list.filter((u) => u.role === "tutor");
+      const piket = list.filter((u) => u.role === "piket");
+
+      let pA = 0, pB = 0, pC = 0;
+      siswa.forEach((s) => {
+        const j = rombelsMap[s.rombel_id]?.jenjang;
+        if (j === "Paket A") pA++;
+        else if (j === "Paket B") pB++;
+        else if (j === "Paket C") pC++;
+      });
+
+      document.getElementById("statTotalSiswa").textContent = siswa.length;
+      document.getElementById("statPaketBreakdown").textContent = `Paket A: ${pA} • B: ${pB} • C: ${pC}`;
+      document.getElementById("statTotalStaff").textContent = tutor.length + piket.length;
+      document.getElementById("statStaffBreakdown").textContent = `Tutor: ${tutor.length} • Piket: ${piket.length}`;
+    }
+
+    function populateTutorSelect() {
+      const sel = document.getElementById("schedTutor");
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">-- Pilih Tutor --</option>';
+      Object.entries(usersMap).forEach(([uid, u]) => {
+        if (u.role === "tutor" && u.is_active !== false) {
+          const opt = document.createElement("option");
+          opt.value = uid;
+          opt.textContent = `${u.nama_lengkap} (${u.identifier})`;
+          sel.appendChild(opt);
+        }
+      });
+      sel.value = cur;
+    }
+
+    function renderUsersTable() {
+      const tbody = document.getElementById("usersTableBody");
+      const q = document.getElementById("searchUserInput").value.toLowerCase();
+      const roleFilter = document.getElementById("filterUserRole").value;
+
+      const entries = Object.entries(usersMap).filter(([_, u]) => {
+        const matchRole = roleFilter === "ALL" || u.role === roleFilter;
+        const matchQuery =
+          !q ||
+          (u.nama_lengkap || "").toLowerCase().includes(q) ||
+          (u.identifier || "").toLowerCase().includes(q);
+        return matchRole && matchQuery;
+      });
+
+      if (entries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">Tidak ada akun ditemukan.</td></tr>';
+        return;
+      }
+
+      const roleBadge = {
+        pengelola: "bg-purple-100 text-purple-700",
+        tutor: "bg-sky-100 text-sky-700",
+        piket: "bg-amber-100 text-amber-700",
+        warga_belajar: "bg-emerald-100 text-emerald-700"
+      };
+
+      tbody.innerHTML = entries
+        .map(([uid, u]) => {
+          const rombelObj = rombelsMap[u.rombel_id];
+          const rombelText = rombelObj ? `${rombelObj.jenjang} - ${rombelObj.nama_rombel}` : "-";
+          const isActive = u.is_active !== false;
+
+          return `
+            <tr class="hover:bg-slate-50/70">
+              <td class="py-3 px-3 font-mono font-semibold text-slate-700">${u.identifier}</td>
+              <td class="py-3 px-3">
+                <div class="font-semibold text-slate-800">${u.nama_lengkap}</div>
+                <div class="text-[11px] text-slate-400">${u.no_hp || ""}</div>
+              </td>
+              <td class="py-3 px-3">
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${roleBadge[u.role] || "bg-slate-100"}">${u.role.replace("_", " ")}</span>
+                ${u.role === "warga_belajar" ? `<div class="text-[11px] text-slate-500 mt-0.5">${rombelText}</div>` : ""}
+              </td>
+              <td class="py-3 px-3">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${isActive ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}">
+                  ${isActive ? "Aktif" : "Nonaktif"}
+                </span>
+              </td>
+              <td class="py-3 px-3 text-right space-x-1 whitespace-nowrap">
+                <button data-reset-pw="${uid}" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-[11px] font-semibold" title="Reset Password ke Default">
+                  Reset Sandi
+                </button>
+                <button data-edit-user="${uid}" class="px-2 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-lg text-[11px] font-semibold">
+                  Edit
+                </button>
+                <button data-toggle-user="${uid}" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold">
+                  ${isActive ? "Nonaktifkan" : "Aktifkan"}
+                </button>
+              </td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      // Event Edit User
+      tbody.querySelectorAll("[data-edit-user]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const uid = btn.dataset.editUser;
+          const u = usersMap[uid];
+          document.getElementById("editUserId").value = uid;
+          document.getElementById("userRole").value = u.role;
+          document.getElementById("userIdentifier").value = u.identifier;
+          document.getElementById("userIdentifier").disabled = true;
+          document.getElementById("userNama").value = u.nama_lengkap;
+          document.getElementById("userRombel").value = u.rombel_id || "";
+          document.getElementById("userHp").value = u.no_hp || "";
+          document.getElementById("userPassword").value = "";
+          document.getElementById("saveUserBtnText").textContent = "Perbarui Data Akun";
+          document.getElementById("cancelEditUserBtn").classList.remove("hidden");
+          document.getElementById("userForm").scrollIntoView({ behavior: "smooth" });
+        });
+      });
+
+      // Event Toggle Aktif/Nonaktif
+      tbody.querySelectorAll("[data-toggle-user]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const uid = btn.dataset.toggleUser;
+          const currentStatus = usersMap[uid].is_active !== false;
+          await update(ref(db, `users/${uid}`), { is_active: !currentStatus });
+          showToast(currentStatus ? "Akun dinonaktifkan." : "Akun diaktifkan kembali.");
+        });
+      });
+
+      // Event Reset Password ke Default
+      tbody.querySelectorAll("[data-reset-pw]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const uid = btn.dataset.resetPw;
+          const u = usersMap[uid];
+          const defaultPw = appSettings.default_password || "pkbm1234";
+          if (!confirm(`Reset kata sandi ${u.nama_lengkap} (${u.identifier}) menjadi "${defaultPw}"?`)) return;
+
+          try {
+            if (u.saved_pw) {
+              const email = toLoginEmail(u.identifier);
+              const secCred = await signInWithEmailAndPassword(secondaryAuth, email, u.saved_pw);
+              await updatePassword(secCred.user, defaultPw);
+              await signOut(secondaryAuth);
+            }
+            await update(ref(db, `users/${uid}`), { saved_pw: defaultPw });
+            showToast(`Sandi ${u.nama_lengkap} berhasil direset ke: ${defaultPw}`);
+          } catch (err) {
+            alert("Gagal mereset sandi otomatis: " + err.message);
+          }
+        });
+      });
+    }
+
+    document.getElementById("searchUserInput").addEventListener("input", renderUsersTable);
+    document.getElementById("filterUserRole").addEventListener("change", renderUsersTable);
+
+    // =========================================================================
+    // LOGIKA JADWAL JUMAT - SABTU
+    // =========================================================================
+    document.getElementById("scheduleForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const editId = document.getElementById("editScheduleId").value;
+      const payload = {
+        hari: document.getElementById("schedHari").value,
+        rombel_id: document.getElementById("schedRombel").value,
+        mata_pelajaran: document.getElementById("schedMapel").value.trim(),
+        tutor_id: document.getElementById("schedTutor").value,
+        sesi: document.getElementById("schedSesi").value,
+        jam_mulai: document.getElementById("schedMulai").value,
+        jam_selesai: document.getElementById("schedSelesai").value,
+        metode: document.getElementById("schedMetode").value
+      };
+
+      if (editId) {
+        await update(ref(db, `schedules/${editId}`), payload);
+        showToast("Jadwal diperbarui.");
+      } else {
+        await push(ref(db, "schedules"), { ...payload, is_session_open: false, created_at: Date.now() });
+        showToast("Jadwal Jumat/Sabtu ditambahkan.");
+      }
+
+      document.getElementById("scheduleForm").reset();
+      document.getElementById("editScheduleId").value = "";
+      document.getElementById("saveSchedBtnText").textContent = "Simpan Jadwal";
+      document.getElementById("cancelEditSchedBtn").classList.add("hidden");
+    });
+
+    document.getElementById("cancelEditSchedBtn").addEventListener("click", () => {
+      document.getElementById("scheduleForm").reset();
+      document.getElementById("editScheduleId").value = "";
+      document.getElementById("saveSchedBtnText").textContent = "Simpan Jadwal";
+      document.getElementById("cancelEditSchedBtn").classList.add("hidden");
+    });
+
+    function renderSchedules() {
+      const tbody = document.getElementById("schedulesTableBody");
+      const filterHari = document.getElementById("filterSchedHari").value;
+      const filterRombel = document.getElementById("filterSchedRombel").value;
+
+      const entries = Object.entries(schedulesMap)
+        .filter(([_, s]) => {
+          const matchHari = filterHari === "ALL" || s.hari === filterHari;
+          const matchRombel = filterRombel === "ALL" || s.rombel_id === filterRombel;
+          return matchHari && matchRombel;
+        })
+        .sort((a, b) => a[1].hari.localeCompare(b[1].hari) || a[1].jam_mulai.localeCompare(b[1].jam_mulai));
+
+      if (entries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-400">Belum ada jadwal pembelajaran.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = entries
+        .map(([id, s]) => {
+          const r = rombelsMap[s.rombel_id];
+          const t = usersMap[s.tutor_id];
+          const isTatapMuka = s.metode === "Tatap Muka";
+
+          return `
+            <tr class="hover:bg-slate-50/70">
+              <td class="py-3 px-3">
+                <span class="px-2 py-0.5 rounded-md font-bold text-[11px] ${s.hari === "Jumat" ? "bg-emerald-100 text-emerald-800" : "bg-sky-100 text-sky-800"}">${s.hari}</span>
+                <div class="text-[11px] text-slate-600 mt-1 font-medium">${s.sesi} (${s.jam_mulai} - ${s.jam_selesai})</div>
+              </td>
+              <td class="py-3 px-3 font-medium text-slate-700">${r ? `${r.jenjang} - ${r.nama_rombel}` : "-"}</td>
+              <td class="py-3 px-3 font-bold text-slate-900">${s.mata_pelajaran}</td>
+              <td class="py-3 px-3 text-slate-600">${t ? t.nama_lengkap : "-"}</td>
+              <td class="py-3 px-3">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${isTatapMuka ? "bg-amber-50 text-amber-700 border border-amber-200" : "bg-indigo-50 text-indigo-700 border border-indigo-200"}">
+                  ${s.metode}
+                </span>
+              </td>
+              <td class="py-3 px-3 text-right space-x-1 whitespace-nowrap">
+                <button data-edit-sched="${id}" class="px-2 py-1 bg-sky-50 text-sky-700 border border-sky-200 rounded-lg text-[11px] font-semibold">Edit</button>
+                <button data-del-sched="${id}" class="px-2 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg text-[11px] font-semibold">Hapus</button>
+              </td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      tbody.querySelectorAll("[data-edit-sched]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const id = btn.dataset.editSched;
+          const s = schedulesMap[id];
+          document.getElementById("editScheduleId").value = id;
+          document.getElementById("schedHari").value = s.hari;
+          document.getElementById("schedRombel").value = s.rombel_id;
+          document.getElementById("schedMapel").value = s.mata_pelajaran;
+          document.getElementById("schedTutor").value = s.tutor_id;
+          document.getElementById("schedSesi").value = s.sesi;
+          document.getElementById("schedMulai").value = s.jam_mulai;
+          document.getElementById("schedSelesai").value = s.jam_selesai;
+          document.getElementById("schedMetode").value = s.metode;
+          document.getElementById("saveSchedBtnText").textContent = "Perbarui Jadwal";
+          document.getElementById("cancelEditSchedBtn").classList.remove("hidden");
+        });
+      });
+
+      tbody.querySelectorAll("[data-del-sched]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          if (confirm("Hapus jadwal pelajaran ini?")) {
+            await remove(ref(db, `schedules/${btn.dataset.delSched}`));
+            showToast("Jadwal dihapus.");
+          }
+        });
+      });
+    }
+
+    document.getElementById("filterSchedHari").addEventListener("change", renderSchedules);
+    document.getElementById("filterSchedRombel").addEventListener("change", renderSchedules);
+
+    // =========================================================================
+    // LOGIKA HARI LIBUR & PENGUMUMAN
+    // =========================================================================
+    document.getElementById("quickTodayHolidayBtn").addEventListener("click", async () => {
+      const wib = getWIBNow();
+      const ket = prompt(`Tetapkan hari ini (${wib.formattedDate}) sebagai HARI LIBUR? Masukkan keterangan:`, "Libur Kegiatan Lembaga");
+      if (!ket) return;
+      await set(ref(db, `holidays/${wib.dateISO}`), {
+        tanggal: wib.dateISO,
+        keterangan: ket.trim(),
+        created_by: currentUser.uid,
+        created_at: Date.now()
+      });
+      showToast("Hari ini ditetapkan sebagai Hari Libur.");
+    });
+
+    document.getElementById("holidayForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const tanggal = document.getElementById("holidayDate").value;
+      const keterangan = document.getElementById("holidayDesc").value.trim();
+      if (!tanggal || !keterangan) return;
+
+      await set(ref(db, `holidays/${tanggal}`), {
+        tanggal,
+        keterangan,
+        created_by: currentUser.uid,
+        created_at: Date.now()
+      });
+      document.getElementById("holidayDesc").value = "";
+      showToast("Tanggal libur disimpan.");
+    });
+
+    function renderHolidays(holidaysObj) {
+      const list = document.getElementById("holidayList");
+      const entries = Object.entries(holidaysObj).sort((a, b) => b[0].localeCompare(a[0]));
+      if (entries.length === 0) {
+        list.innerHTML = '<p class="text-slate-400">Belum ada tanggal libur diatur.</p>';
+        return;
+      }
+      list.innerHTML = entries
+        .map(([tgl, h]) => `
+          <div class="flex items-center justify-between bg-amber-50/70 border border-amber-200 px-3 py-2.5 rounded-xl">
+            <div>
+              <span class="font-bold text-amber-900">${tgl}</span>
+              <p class="text-slate-700 mt-0.5">${h.keterangan}</p>
+            </div>
+            <button data-del-holiday="${tgl}" class="text-rose-600 hover:text-rose-800 font-semibold px-2 py-1">Hapus</button>
+          </div>
+        `)
+        .join("");
+
+      list.querySelectorAll("[data-del-holiday]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          await remove(ref(db, `holidays/${btn.dataset.delHoliday}`));
+          showToast("Tanggal libur dihapus.");
+        });
+      });
+    }
+
+    document.getElementById("announcementForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await push(ref(db, "announcements"), {
+        judul: document.getElementById("annJudul").value.trim(),
+        isi: document.getElementById("annIsi").value.trim(),
+        tipe: document.getElementById("annTipe").value,
+        is_active: true,
+        created_by: currentUser.uid,
+        created_at: Date.now()
+      });
+      document.getElementById("announcementForm").reset();
+      showToast("Pengumuman diterbitkan ke semua dashboard.");
+    });
+
+    function renderAnnouncements(annObj) {
+      const bannerContainer = document.getElementById("announcementBannerContainer");
+      const adminList = document.getElementById("announcementAdminList");
+      const entries = Object.entries(annObj).sort((a, b) => (b[1].created_at || 0) - (a[1].created_at || 0));
+
+      // Render Banner Aktif di Atas Dashboard
+      const activeItems = entries.filter(([_, a]) => a.is_active !== false);
+      if (activeItems.length > 0) {
+        bannerContainer.classList.remove("hidden");
+        bannerContainer.innerHTML = activeItems
+          .map(([_, a]) => {
+            const styleMap = {
+              info: "bg-sky-50 border-sky-200 text-sky-900",
+              penting: "bg-rose-50 border-rose-200 text-rose-900",
+              libur: "bg-amber-50 border-amber-200 text-amber-900"
+            };
+            return `
+              <div class="p-3.5 rounded-2xl border ${styleMap[a.tipe] || styleMap.info} flex items-start gap-3">
+                <i data-lucide="megaphone" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                <div class="text-xs">
+                  <p class="font-bold">${a.judul}</p>
+                  <p class="mt-0.5 opacity-90">${a.isi}</p>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+        lucide.createIcons();
+      } else {
+        bannerContainer.classList.add("hidden");
+      }
+
+      // Render Daftar Kelola di Tab Pengumuman
+      if (entries.length === 0) {
+        adminList.innerHTML = '<p class="text-slate-400">Belum ada pengumuman.</p>';
+        return;
+      }
+
+      adminList.innerHTML = entries
+        .map(([id, a]) => `
+          <div class="flex items-start justify-between gap-2 bg-slate-50 border border-slate-200 p-3 rounded-xl">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-800">${a.judul}</span>
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold ${a.is_active ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"}">
+                  ${a.is_active ? "Tayang" : "Disembunyikan"}
+                </span>
+              </div>
+              <p class="text-slate-600 mt-1">${a.isi}</p>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button data-toggle-ann="${id}" class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold">
+                ${a.is_active ? "Sembunyikan" : "Tampilkan"}
+              </button>
+              <button data-del-ann="${id}" class="px-2 py-1 bg-rose-50 text-rose-600 rounded-lg text-[11px] font-semibold">Hapus</button>
+            </div>
+          </div>
+        `)
+        .join("");
+
+      adminList.querySelectorAll("[data-toggle-ann]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.toggleAnn;
+          await update(ref(db, `announcements/${id}`), { is_active: !annObj[id].is_active });
+        });
+      });
+
+      adminList.querySelectorAll("[data-del-ann]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          await remove(ref(db, `announcements/${btn.dataset.delAnn}`));
+          showToast("Pengumuman dihapus.");
+        });
+      });
+    }
+
+    // =========================================================================
+    // LOGIKA MONITORING REKAP, JURNAL PIKET & EXPORT EXCEL (CSV)
+    // =========================================================================
+    function getFilteredAttendanceRows() {
+      const monthFilter = document.getElementById("filterRecapMonth").value;
+      const rombelFilter = document.getElementById("filterRecapRombel").value;
+      const statusFilter = document.getElementById("filterRecapStatus").value;
+      const todayISO = getWIBNow().dateISO;
+
+      let todayCount = 0;
+      const rows = [];
+
+      Object.entries(attendancesMap).forEach(([dateISO, schedGroup]) => {
+        Object.entries(schedGroup || {}).forEach(([schedId, siswaGroup]) => {
+          const sched = schedulesMap[schedId] || {};
+          const rombel = rombelsMap[sched.rombel_id] || {};
+
+          Object.entries(siswaGroup || {}).forEach(([siswaId, rec]) => {
+            if (dateISO === todayISO) todayCount++;
+
+            const matchMonth = !monthFilter || dateISO.startsWith(monthFilter);
+            const matchRombel = rombelFilter === "ALL" || sched.rombel_id === rombelFilter;
+            const matchStatus = statusFilter === "ALL" || rec.status === statusFilter;
+
+            if (matchMonth && matchRombel && matchStatus) {
+              const siswa = usersMap[siswaId] || {};
+              rows.push({
+                tanggal: dateISO,
+                hari: sched.hari || "-",
+                nisn: siswa.identifier || "-",
+                nama_siswa: siswa.nama_lengkap || "Warga Belajar",
+                jenjang: rombel.jenjang || "-",
+                nama_rombel: rombel.nama_rombel || "-",
+                mapel: sched.mata_pelajaran || "-",
+                status: rec.status || "Hadir",
+                metode: rec.metode_absen || "-"
+              });
+            }
+          });
+        });
+      });
+
+      document.getElementById("statTodayAttendance").textContent = todayCount;
+      return rows.sort((a, b) => b.tanggal.localeCompare(a.tanggal));
+    }
+
+    function renderRecapTable() {
+      const tbody = document.getElementById("recapTableBody");
+      const rows = getFilteredAttendanceRows();
+
+      if (rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-400">Belum ada data kehadiran sesuai filter.</td></tr>';
+        return;
+      }
+
+      const statusBadge = {
+        Hadir: "bg-emerald-100 text-emerald-800",
+        Izin: "bg-sky-100 text-sky-800",
+        Sakit: "bg-amber-100 text-amber-800",
+        "Tanpa Keterangan": "bg-rose-100 text-rose-800"
+      };
+
+      tbody.innerHTML = rows
+        .map((r) => `
+          <tr class="hover:bg-slate-50/70">
+            <td class="py-2.5 px-3 font-medium">${r.tanggal} <span class="text-slate-400">(${r.hari})</span></td>
+            <td class="py-2.5 px-3">
+              <div class="font-semibold text-slate-800">${r.nama_siswa}</div>
+              <div class="text-[11px] text-slate-400 font-mono">${r.nisn}</div>
+            </td>
+            <td class="py-2.5 px-3">${r.jenjang} - ${r.nama_rombel}</td>
+            <td class="py-2.5 px-3 font-medium">${r.mapel}</td>
+            <td class="py-2.5 px-3">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${statusBadge[r.status] || "bg-slate-100"}">${r.status}</span>
+            </td>
+            <td class="py-2.5 px-3 text-slate-500">${r.metode}</td>
+          </tr>
+        `)
+        .join("");
+    }
+
+    document.getElementById("filterRecapMonth").addEventListener("change", renderRecapTable);
+    document.getElementById("filterRecapRombel").addEventListener("change", renderRecapTable);
+    document.getElementById("filterRecapStatus").addEventListener("change", renderRecapTable);
+
+    // Export Rekap ke Excel (.CSV dengan UTF-8 BOM)
+    document.getElementById("exportCsvBtn").addEventListener("click", () => {
+      const rows = getFilteredAttendanceRows();
+      if (rows.length === 0) {
+        alert("Tidak ada data kehadiran pada filter yang dipilih untuk diunduh.");
+        return;
+      }
+
+      const headers = ["Tanggal", "Hari", "NISN/Username", "Nama Warga Belajar", "Jenjang", "Rombel", "Mata Pelajaran", "Status Kehadiran", "Metode Absen"];
+      const csvLines = [
+        headers.join(","),
+        ...rows.map((r) =>
+          [r.tanggal, r.hari, r.nisn, r.nama_siswa, r.jenjang, r.nama_rombel, r.mapel, r.status, r.metode]
+            .map((val) => `"${String(val).replace(/"/g, '""')}"`)
+            .join(",")
+        )
+      ];
+
+      const blob = new Blob(["\uFEFF" + csvLines.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const periode = document.getElementById("filterRecapMonth").value || "semua";
+      link.href = url;
+      link.download = `Rekap_Absensi_PKBM_${periode}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+
+    function renderPicketJournals(journalsObj) {
+      const container = document.getElementById("picketJournalList");
+      const entries = Object.values(journalsObj).sort((a, b) => (b.created_at || 0) - (a.created_at || 0)).slice(0, 10);
+      if (entries.length === 0) {
+        container.innerHTML = '<p class="text-slate-400">Belum ada catatan jurnal dari Petugas Piket.</p>';
+        return;
+      }
+      container.innerHTML = entries
+        .map((j) => `
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <div class="flex items-center justify-between text-[11px] text-slate-500">
+              <span class="font-bold text-amber-700">${j.kategori}</span>
+              <span>${j.hari}, ${j.tanggal} • Petugas: ${j.petugas_nama || "Piket"}</span>
+            </div>
+            <p class="text-slate-800 mt-1">${j.deskripsi}</p>
+          </div>
+        `)
+        .join("");
+    }
+
+    // =========================================================================
+    // LOGIKA PENGATURAN IDENTITAS WEB
+    // =========================================================================
+    document.getElementById("settingsForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await update(ref(db, "settings"), {
+        nama_pkbm: document.getElementById("setNamaPkbm").value.trim(),
+        logo_url: document.getElementById("setLogoUrl").value.trim(),
+        tahun_ajaran: document.getElementById("setTahunAjaran").value.trim(),
+        wa_admin: document.getElementById("setWaAdmin").value.trim(),
+        wa_template: document.getElementById("setWaTemplate").value.trim(),
+        default_password: document.getElementById("setDefaultPw").value.trim() || "pkbm1234"
+      });
+      showToast("Identitas PKBM & Pengaturan Web berhasil diperbarui.");
+    });
+  </script>
+</body>
+</html>
