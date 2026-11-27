@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Tutor - LMS PKBM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 pb-20 md:pb-8">
+
+  <!-- Top Navbar -->
+  <header class="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center shrink-0 overflow-hidden p-1">
+          <img id="navLogoImg" src="" alt="Logo" class="w-full h-full object-contain hidden bg-white rounded-lg" />
+          <i id="navLogoFallback" data-lucide="book-open-check" class="w-6 h-6"></i>
+        </div>
+        <div class="min-w-0">
+          <h1 id="navPkbmName" class="text-sm sm:text-base font-bold text-slate-900 truncate">LMS PKBM</h1>
+          <p class="text-[11px] text-sky-700 font-medium truncate">
+            Panel Tutor • <span id="navUserName">Pengajar</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div class="hidden sm:flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-full text-xs font-semibold">
+          <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-600"></i>
+          <span id="headerWibClock">--:-- WIB</span>
+        </div>
+        <button
+          id="logoutBtn"
+          class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold border border-rose-200 transition"
+        >
+          <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+          <span>Keluar</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Desktop Tab Navigation -->
+    <nav class="hidden md:block bg-slate-50/80 border-t border-slate-200">
+      <div class="max-w-7xl mx-auto px-4 flex gap-1">
+        <button data-tab="jadwal" class="tab-btn px-4 py-3 text-xs font-semibold border-b-2 border-sky-600 text-sky-700 flex items-center gap-2">
+          <i data-lucide="calendar-days" class="w-4 h-4"></i> Jadwal & Sesi Presensi
+        </button>
+        <button data-tab="materi" class="tab-btn px-4 py-3 text-xs font-semibold border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2">
+          <i data-lucide="folder-open" class="w-4 h-4"></i> Materi Pembelajaran
+        </button>
+        <button data-tab="tugas" class="tab-btn px-4 py-3 text-xs font-semibold border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2">
+          <i data-lucide="file-check-2" class="w-4 h-4"></i> Tugas Google Form
+        </button>
+        <button data-tab="nilai" class="tab-btn px-4 py-3 text-xs font-semibold border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2">
+          <i data-lucide="award" class="w-4 h-4"></i> Verifikasi & Import Nilai CSV
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Kontainer Utama -->
+  <main class="max-w-7xl mx-auto px-4 pt-5 space-y-5">
+
+    <!-- Banner Pengumuman Aktif -->
+    <section id="announcementBannerContainer" class="hidden space-y-2"></section>
+
+    <!-- Banner Status Hari Libur (Jika hari ini ditetapkan libur) -->
+    <section id="holidayAlertBanner" class="hidden bg-amber-50 border border-amber-300 text-amber-900 p-4 rounded-2xl flex items-start gap-3">
+      <i data-lucide="calendar-off" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i>
+      <div class="text-xs">
+        <p class="font-bold text-sm">Hari Ini Ditetapkan Sebagai Hari Libur</p>
+        <p id="holidayAlertDesc" class="mt-0.5">Keterangan libur</p>
+      </div>
+    </section>
+
+    <!-- Notifikasi Toast -->
+    <div id="toastBox" class="hidden fixed bottom-20 md:bottom-6 right-4 z-50 max-w-sm bg-slate-900 text-white text-xs font-medium px-4 py-3 rounded-2xl shadow-lg flex items-center gap-2.5">
+      <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+      <span id="toastText">Berhasil disimpan</span>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- TAB 1: JADWAL MENGAJAR JUMAT-SABTU, TOKEN HARIAN & PRESENSI MAPEL   -->
+    <!-- =================================================================== -->
+    <section id="tab-jadwal" class="tab-panel space-y-5">
+      <!-- Kartu Info Hari Ini & Token Absensi 4 Digit -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="md:col-span-2 bg-gradient-to-r from-sky-600 to-indigo-600 text-white p-5 rounded-2xl shadow-xs flex flex-col justify-between">
+          <div>
+            <span id="todayBadge" class="inline-block px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/20 border border-white/25">
+              Memuat hari...
+            </span>
+            <h2 id="todayGreeting" class="text-lg sm:text-xl font-bold mt-2">Jadwal Mengajar Hari Ini</h2>
+            <p id="todaySubtext" class="text-xs text-sky-100 mt-1">
+              Buka sesi presensi saat jam pelajaran berlangsung agar Warga Belajar dapat mengisi kehadiran.
+            </p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-white/15 flex flex-wrap items-center justify-between gap-2 text-xs text-sky-100">
+            <span id="todayFullDate">-</span>
+            <span class="font-semibold">Zona Waktu WIB (UTC+7)</span>
+          </div>
+        </div>
+
+        <!-- Kartu Token Absensi Harian (4 Digit) -->
+        <div class="bg-white p-5 rounded-2xl border border-amber-200 shadow-xs flex flex-col justify-between">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <span class="text-xs font-semibold text-amber-700 uppercase tracking-wide">Token Tatap Muka</span>
+              <p class="text-[11px] text-slate-500 mt-0.5">Bagikan kode 4 digit ini kepada siswa di kelas tatap muka hari ini.</p>
+            </div>
+            <span class="p-2 bg-amber-50 text-amber-600 rounded-xl shrink-0">
+              <i data-lucide="key-round" class="w-5 h-5"></i>
+            </span>
+          </div>
+          <div class="my-3 bg-amber-50/80 border border-amber-200 rounded-xl py-3 text-center">
+            <span id="dailyTokenDisplay" class="text-3xl font-mono font-extrabold tracking-[0.35em] text-amber-700">----</span>
+          </div>
+          <p class="text-[11px] text-slate-400 text-center">Berlaku otomatis untuk tanggal hari ini (WIB)</p>
+        </div>
+      </div>
+
+      <!-- Sorotan Jadwal Hari Berjalan (Jumat / Sabtu) -->
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Jadwal Mengajar Aktif Hari Ini</h3>
+            <p class="text-xs text-slate-500">Klik tombol buka sesi presensi untuk mengaktifkan absensi Warga Belajar.</p>
+          </div>
+        </div>
+        <div id="todaySchedulesList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <p class="text-xs text-slate-400">Memuat jadwal mengajar...</p>
+        </div>
+      </div>
+
+      <!-- Seluruh Jadwal Mengajar Tutor (Jumat & Sabtu) -->
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Semua Jadwal Ampuan (Jumat & Sabtu)</h3>
+            <p class="text-xs text-slate-500">Daftar lengkap mata pelajaran yang Anda ampu setiap pekan.</p>
+          </div>
+          <select id="filterMySchedDay" class="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl">
+            <option value="ALL">Semua Hari (Jumat & Sabtu)</option>
+            <option value="Jumat">Khusus Hari Jumat</option>
+            <option value="Sabtu">Khusus Hari Sabtu</option>
+          </select>
+        </div>
+
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-3">Hari & Jam</th>
+                <th class="py-3 px-3">Paket / Rombel</th>
+                <th class="py-3 px-3">Mata Pelajaran</th>
+                <th class="py-3 px-3">Metode</th>
+                <th class="py-3 px-3 text-right">Presensi</th>
+              </tr>
+            </thead>
+            <tbody id="allMySchedulesBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Panel Absensi Siswa Per Mata Pelajaran -->
+      <div id="attendancePanelCard" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Daftar Hadir Warga Belajar Per Mata Pelajaran</h3>
+            <p class="text-xs text-slate-500">Pantau presensi mandiri siswa atau catat kehadiran secara manual.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <select id="attSelectSchedule" class="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium">
+              <option value="">-- Pilih Mata Pelajaran --</option>
+            </select>
+            <input type="date" id="attSelectDate" class="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl" />
+          </div>
+        </div>
+
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-3">NISN / ID</th>
+                <th class="py-3 px-3">Nama Warga Belajar</th>
+                <th class="py-3 px-3">Status Kehadiran</th>
+                <th class="py-3 px-3">Keterangan / Bukti</th>
+                <th class="py-3 px-3 text-right">Ubah Status Cepat</th>
+              </tr>
+            </thead>
+            <tbody id="classAttendanceBody" class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="5" class="py-6 text-center text-slate-400">Pilih mata pelajaran di atas untuk melihat daftar hadir siswa.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 2: MANAJEMEN MATERI PEMBELAJARAN (PDF / GOOGLE DRIVE / YOUTUBE) -->
+    <!-- =================================================================== -->
+    <section id="tab-materi" class="tab-panel hidden space-y-5">
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Bagikan Modul & Materi Pembelajaran</h2>
+          <p class="text-xs text-slate-500">Tempel tautan PDF, Google Drive, atau video YouTube untuk diakses oleh Warga Belajar.</p>
+        </div>
+
+        <form id="materialForm" class="bg-slate-50 p-4 rounded-2xl border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Mata Pelajaran & Rombel</label>
+            <select id="matScheduleId" required class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl">
+              <option value="">-- Pilih Jadwal Mapel --</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Jenis Sumber Materi</label>
+            <select id="matTipe" required class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl">
+              <option value="Google Drive">Google Drive (Modul / Slide)</option>
+              <option value="PDF">Dokumen PDF</option>
+              <option value="YouTube">Video Pembelajaran YouTube</option>
+              <option value="Lainnya">Tautan Web Lainnya</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Judul Modul / Materi</label>
+            <input type="text" id="matJudul" required placeholder="Contoh: Modul 1 - Konsep Dasar Ekonomi" class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Tautan (URL Link)</label>
+            <input type="url" id="matUrl" required placeholder="https://drive.google.com/..." class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl" />
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Ringkasan / Catatan Belajar (Opsional)</label>
+            <input type="text" id="matDeskripsi" placeholder="Petunjuk singkat untuk warga belajar sebelum membaca modul" class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl" />
+          </div>
+
+          <div class="sm:col-span-2">
+            <button type="submit" class="px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold rounded-xl inline-flex items-center gap-1.5">
+              <i data-lucide="plus-circle" class="w-4 h-4"></i> Terbitkan Materi
+            </button>
+          </div>
+        </form>
+
+        <!-- Daftar Materi Tutor -->
+        <div id="materialsList" class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2"></div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 3: TUGAS & UJIAN (INTEGRASI GOOGLE FORM)                        -->
+    <!-- =================================================================== -->
+    <section id="tab-tugas" class="tab-panel hidden space-y-5">
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Buat Tugas / Evaluasi (Integrasi Google Form)</h2>
+          <p class="text-xs text-slate-500">Tempel link Google Form untuk disematkan langsung di halaman LMS siswa atau dibuka di tab baru.</p>
+        </div>
+
+        <form id="assignmentForm" class="bg-slate-50 p-4 rounded-2xl border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Mata Pelajaran & Rombel</label>
+            <select id="assignScheduleId" required class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl">
+              <option value="">-- Pilih Jadwal Mapel --</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Judul Tugas / Kuis</label>
+            <input type="text" id="assignJudul" required placeholder="Contoh: Tugas Mandiri Pertemuan 1" class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Link Google Form</label>
+            <input type="url" id="assignGformUrl" required placeholder="https://docs.google.com/forms/d/e/..." class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Batas Waktu Pengumpulan (Deadline WIB)</label>
+            <input type="datetime-local" id="assignDeadline" class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl" />
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Instruksi Pengerjaan</label>
+            <textarea id="assignInstruksi" rows="2" placeholder="Contoh: Wajib mengisi NISN dengan benar pada kolom pertama Google Form." class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl"></textarea>
+          </div>
+
+          <div class="sm:col-span-2 flex flex-wrap items-center justify-between gap-3">
+            <label class="inline-flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+              <input type="checkbox" id="assignIsEmbed" checked class="rounded text-sky-600 focus:ring-sky-500" />
+              <span>Aktifkan mode <strong>Embed</strong> (Google Form tampil langsung di dalam LMS)</span>
+            </label>
+
+            <button type="submit" class="px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold rounded-xl inline-flex items-center gap-1.5">
+              <i data-lucide="send" class="w-4 h-4"></i> Publikasikan Tugas
+            </button>
+          </div>
+        </form>
+
+        <!-- Daftar Tugas Aktif -->
+        <div id="assignmentsList" class="space-y-3 pt-2"></div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 4: VERIFIKASI TUGAS & IMPORT NILAI CSV GOOGLE FORM              -->
+    <!-- =================================================================== -->
+    <section id="tab-nilai" class="tab-panel hidden space-y-5">
+      <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Verifikasi Penyelesaian & Rekap Nilai</h2>
+            <p class="text-xs text-slate-500">Pilih tugas untuk memeriksa status pengerjaan siswa, input nilai manual, atau import CSV dari Google Form.</p>
+          </div>
+          <select id="gradeSelectAssignment" class="px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 max-w-md">
+            <option value="">-- Pilih Tugas / Evaluasi --</option>
+          </select>
+        </div>
+
+        <!-- Kotak Import CSV Google Form -->
+        <div id="csvImportBox" class="hidden bg-sky-50/70 border border-sky-200 p-4 rounded-2xl space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 class="text-xs font-bold text-sky-900 flex items-center gap-1.5">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-sky-600"></i>
+                Import Nilai Massal dari CSV Google Form
+              </h3>
+              <p class="text-[11px] text-sky-800 mt-0.5">
+                Unggah file <code>.csv</code> hasil unduhan respons Google Form / Google Sheets. Pastikan terdapat kolom <strong>NISN/Username</strong> dan kolom <strong>Score/Nilai</strong>.
+              </p>
+            </div>
+            <label class="cursor-pointer inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold rounded-xl shrink-0">
+              <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+              <span>Pilih File CSV</span>
+              <input type="file" id="csvFileInput" accept=".csv,text/csv" class="hidden" />
+            </label>
+          </div>
+
+          <!-- Pemetaan Kolom CSV setelah file dipilih -->
+          <div id="csvMappingArea" class="hidden bg-white p-3.5 rounded-xl border border-sky-200 space-y-3">
+            <p id="csvFileSummary" class="text-xs font-semibold text-slate-700"></p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Kolom Identitas (NISN / Username / Email)</label>
+                <select id="csvIdColSelect" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl"></select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Kolom Nilai / Skor (Score)</label>
+                <select id="csvScoreColSelect" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl"></select>
+              </div>
+            </div>
+            <button type="button" id="processCsvImportBtn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl">
+              Terapkan Nilai ke Daftar Siswa
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabel Verifikasi & Input Nilai Siswa -->
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-3">NISN / ID</th>
+                <th class="py-3 px-3">Nama Warga Belajar</th>
+                <th class="py-3 px-3">Status Tugas</th>
+                <th class="py-3 px-3 w-28">Nilai (0-100)</th>
+                <th class="py-3 px-3">Catatan Tutor</th>
+                <th class="py-3 px-3 text-right">Simpan</th>
+              </tr>
+            </thead>
+            <tbody id="gradesTableBody" class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="6" class="py-6 text-center text-slate-400">Pilih tugas pada menu dropdown di atas untuk mulai menilai.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal Pratinjau Embed Google Form -->
+  <div id="embedModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between">
+        <h3 id="embedModalTitle" class="text-sm font-bold text-slate-900 truncate">Pratinjau Google Form</h3>
+        <button id="closeEmbedModalBtn" class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="flex-1 bg-slate-100 min-h-[450px]">
+        <iframe id="embedModalIframe" src="" class="w-full h-[70vh] border-0" loading="lazy"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 grid grid-cols-4 text-[10px] font-semibold text-slate-500">
+    <button data-tab="jadwal" class="tab-btn-mobile py-2.5 flex flex-col items-center gap-1 text-sky-600">
+      <i data-lucide="calendar-days" class="w-4 h-4"></i> Jadwal
+    </button>
+    <button data-tab="materi" class="tab-btn-mobile py-2.5 flex flex-col items-center gap-1">
+      <i data-lucide="folder-open" class="w-4 h-4"></i> Materi
+    </button>
+    <button data-tab="tugas" class="tab-btn-mobile py-2.5 flex flex-col items-center gap-1">
+      <i data-lucide="file-check-2" class="w-4 h-4"></i> Tugas
+    </button>
+    <button data-tab="nilai" class="tab-btn-mobile py-2.5 flex flex-col items-center gap-1">
+      <i data-lucide="award" class="w-4 h-4"></i> Nilai
+    </button>
+  </nav>
+
+  <script type="module">
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import {
+      ref,
+      get,
+      set,
+      push,
+      update,
+      remove,
+      onValue
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+    import { auth, db, DOMAIN_SUFFIX, getWIBNow, getPageByRole } from "./config.js";
+
+    lucide.createIcons();
+
+    let currentUser = null;
+    let rombelsMap = {};
+    let usersMap = {};
+    let allSchedulesMap = {};
+    let mySchedulesMap = {};
+    let materialsMap = {};
+    let assignmentsMap = {};
+    let currentSubmissions = {};
+    let parsedCsvData = { headers: [], rows: [] };
+
+    function showToast(msg) {
+      const box = document.getElementById("toastBox");
+      document.getElementById("toastText").textContent = msg;
+      box.classList.remove("hidden");
+      setTimeout(() => box.classList.add("hidden"), 3200);
+    }
+
+    // Jam WIB Real-Time
+    function updateClock() {
+      const wib = getWIBNow();
+      document.getElementById("headerWibClock").textContent = `${wib.dayName}, ${wib.timeShort} WIB`;
+      document.getElementById("todayFullDate").textContent = wib.formattedDate;
+      document.getElementById("todayBadge").textContent = wib.isLearningDay
+        ? `HARI AKTIF BELAJAR (${wib.dayName.toUpperCase()})`
+        : `HARI INI: ${wib.dayName.toUpperCase()} (DI LUAR JADWAL JUMAT–SABTU)`;
+    }
+    updateClock();
+    setInterval(updateClock, 15000);
+
+    // Default tanggal filter presensi = hari ini WIB
+    document.getElementById("attSelectDate").value = getWIBNow().dateISO;
+
+    // Navigasi Tab
+    function switchTab(tabName) {
+      document.querySelectorAll(".tab-panel").forEach((el) => el.classList.add("hidden"));
+      document.getElementById(`tab-${tabName}`).classList.remove("hidden");
+
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        const active = btn.dataset.tab === tabName;
+        btn.classList.toggle("border-sky-600", active);
+        btn.classList.toggle("text-sky-700", active);
+        btn.classList.toggle("border-transparent", !active);
+        btn.classList.toggle("text-slate-600", !active);
+      });
+
+      document.querySelectorAll(".tab-btn-mobile").forEach((btn) => {
+        btn.classList.toggle("text-sky-600", btn.dataset.tab === tabName);
+      });
+    }
+
+    document.querySelectorAll(".tab-btn, .tab-btn-mobile").forEach((btn) => {
+      btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+    });
+
+    // Logout
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "index.html";
+    });
+
+    // Cek Autentikasi & Role Tutor
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+      const snap = await get(ref(db, `users/${user.uid}`));
+      if (!snap.exists() || snap.val().role !== "tutor") {
+        window.location.href = snap.exists() ? getPageByRole(snap.val().role) : "index.html";
+        return;
+      }
+      currentUser = { uid: user.uid, ...snap.val() };
+      document.getElementById("navUserName").textContent = currentUser.nama_lengkap;
+      initListeners();
+    });
+
+    // Ambil atau buat Token Absensi Harian 4 Digit (WIB)
+    async function ensureDailyToken() {
+      const { dateISO } = getWIBNow();
+      const tokenRef = ref(db, `daily_tokens/${dateISO}`);
+      onValue(tokenRef, async (snap) => {
+        if (snap.exists()) {
+          document.getElementById("dailyTokenDisplay").textContent = snap.val().token_code;
+        } else {
+          const code = String(Math.floor(1000 + Math.random() * 9000));
+          await set(tokenRef, { token_code: code, created_at: Date.now() });
+        }
+      });
+    }
+
+    function initListeners() {
+      const todayISO = getWIBNow().dateISO;
+      ensureDailyToken();
+
+      // 1. Settings
+      onValue(ref(db, "settings"), (snap) => {
+        if (snap.exists()) {
+          const s = snap.val();
+          if (s.nama_pkbm) document.getElementById("navPkbmName").textContent = s.nama_pkbm;
+          if (s.logo_url) {
+            const img = document.getElementById("navLogoImg");
+            img.src = s.logo_url;
+            img.classList.remove("hidden");
+            document.getElementById("navLogoFallback").classList.add("hidden");
+          }
+        }
+      });
+
+      // 2. Announcements
+      onValue(ref(db, "announcements"), (snap) => {
+        renderAnnouncements(snap.val() || {});
+      });
+
+      // 3. Holiday check for today
+      onValue(ref(db, `holidays/${todayISO}`), (snap) => {
+        const banner = document.getElementById("holidayAlertBanner");
+        if (snap.exists()) {
+          banner.classList.remove("hidden");
+          document.getElementById("holidayAlertDesc").textContent =
+            `${snap.val().keterangan} — Sesi presensi otomatis dinonaktifkan pada hari libur.`;
+        } else {
+          banner.classList.add("hidden");
+        }
+      });
+
+      // 4. Rombels
+      onValue(ref(db, "rombels"), (snap) => {
+        rombelsMap = snap.val() || {};
+        renderSchedules();
+        renderMaterials();
+        renderAssignments();
+      });
+
+      // 5. Users
+      onValue(ref(db, "users"), (snap) => {
+        usersMap = snap.val() || {};
+        loadClassAttendance();
+        renderGradesTable();
+      });
+
+      // 6. Schedules (Filter khusus tutor yang sedang login)
+      onValue(ref(db, "schedules"), (snap) => {
+        allSchedulesMap = snap.val() || {};
+        mySchedulesMap = {};
+        Object.entries(allSchedulesMap).forEach(([id, s]) => {
+          if (s.tutor_id === currentUser.uid) {
+            mySchedulesMap[id] = s;
+          }
+        });
+        populateScheduleDropdowns();
+        renderSchedules();
+        renderMaterials();
+        renderAssignments();
+      });
+
+      // 7. Materials
+      onValue(ref(db, "materials"), (snap) => {
+        materialsMap = snap.val() || {};
+        renderMaterials();
+      });
+
+      // 8. Assignments
+      onValue(ref(db, "assignments"), (snap) => {
+        assignmentsMap = snap.val() || {};
+        populateAssignmentDropdown();
+        renderAssignments();
+      });
+    }
+
+    // Render Banner Pengumuman
+    function renderAnnouncements(annObj) {
+      const container = document.getElementById("announcementBannerContainer");
+      const active = Object.values(annObj)
+        .filter((a) => a.is_active !== false)
+        .sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
+
+      if (active.length === 0) {
+        container.classList.add("hidden");
+        return;
+      }
+
+      const styles = {
+        info: "bg-sky-50 border-sky-200 text-sky-900",
+        penting: "bg-rose-50 border-rose-200 text-rose-900",
+        libur: "bg-amber-50 border-amber-200 text-amber-900"
+      };
+
+      container.classList.remove("hidden");
+      container.innerHTML = active
+        .map((a) => `
+          <div class="p-3.5 rounded-2xl border ${styles[a.tipe] || styles.info} flex items-start gap-3">
+            <i data-lucide="megaphone" class="w-4 h-4 shrink-0 mt-0.5"></i>
+            <div class="text-xs">
+              <p class="font-bold">${a.judul}</p>
+              <p class="mt-0.5 opacity-90">${a.isi}</p>
+            </div>
+          </div>
+        `)
+        .join("");
+      lucide.createIcons();
+    }
+
+    // Isi dropdown mata pelajaran milik tutor
+    function populateScheduleDropdowns() {
+      const selects = [
+        document.getElementById("attSelectSchedule"),
+        document.getElementById("matScheduleId"),
+        document.getElementById("assignScheduleId")
+      ];
+
+      const entries = Object.entries(mySchedulesMap).sort(
+        (a, b) => a[1].hari.localeCompare(b[1].hari) || a[1].jam_mulai.localeCompare(b[1].jam_mulai)
+      );
+
+      selects.forEach((sel) => {
+        const prev = sel.value;
+        sel.innerHTML = '<option value="">-- Pilih Mata Pelajaran --</option>';
+        entries.forEach(([id, s]) => {
+          const r = rombelsMap[s.rombel_id];
+          const opt = document.createElement("option");
+          opt.value = id;
+          opt.textContent = `[${s.hari} ${s.jam_mulai}] ${s.mata_pelajaran} (${r ? `${r.jenjang} - ${r.nama_rombel}` : "-"})`;
+          sel.appendChild(opt);
+        });
+        if (prev && mySchedulesMap[prev]) sel.value = prev;
+      });
+
+      // Otomatis pilih jadwal pertama hari ini pada panel absensi jika belum dipilih
+      const attSel = document.getElementById("attSelectSchedule");
+      if (!attSel.value && entries.length > 0) {
+        const todayName = getWIBNow().dayName;
+        const todayMatch = entries.find(([_, s]) => s.hari === todayName) || entries[0];
+        attSel.value = todayMatch[0];
+        loadClassAttendance();
+      }
+    }
+
+    // =========================================================================
+    // 1. RENDER JADWAL MENGAJAR & KONTROL SESI PRESENSI
+    // =========================================================================
+    function renderSchedules() {
+      const todayContainer = document.getElementById("todaySchedulesList");
+      const allTbody = document.getElementById("allMySchedulesBody");
+      const filterDay = document.getElementById("filterMySchedDay").value;
+      const wib = getWIBNow();
+
+      const myEntries = Object.entries(mySchedulesMap).sort(
+        (a, b) => a[1].hari.localeCompare(b[1].hari) || a[1].jam_mulai.localeCompare(b[1].jam_mulai)
+      );
+
+      // A. Sorotan Jadwal Hari Ini (Jumat / Sabtu)
+      const todayEntries = myEntries.filter(([_, s]) => s.hari === wib.dayName);
+
+      if (todayEntries.length === 0) {
+        todayContainer.innerHTML = `
+          <div class="md:col-span-2 p-5 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-500">
+            Tidak ada jadwal mengajar pada hari <strong>${wib.dayName}</strong>. Jadwal aktif pembelajaran PKBM berlangsung pada hari <strong>Jumat</strong> dan <strong>Sabtu</strong>.
+          </div>
+        `;
+      } else {
+        todayContainer.innerHTML = todayEntries
+          .map(([id, s]) => {
+            const r = rombelsMap[s.rombel_id];
+            const isOpen = s.is_session_open === true;
+            const isTatapMuka = s.metode === "Tatap Muka";
+
+            return `
+              <div class="p-4 rounded-2xl border ${isOpen ? "bg-emerald-50/60 border-emerald-300" : "bg-slate-50 border-slate-200"} flex flex-col justify-between gap-3">
+                <div>
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${isTatapMuka ? "bg-amber-100 text-amber-800" : "bg-indigo-100 text-indigo-800"}">
+                      ${s.metode}
+                    </span>
+                    <span class="text-xs font-semibold text-slate-600">${s.sesi} • ${s.jam_mulai} - ${s.jam_selesai} WIB</span>
+                  </div>
+                  <h4 class="text-base font-bold text-slate-900 mt-2">${s.mata_pelajaran}</h4>
+                  <p class="text-xs text-slate-600 font-medium">${r ? `${r.jenjang} - ${r.nama_rombel}` : "-"}</p>
+                </div>
+
+                <div class="pt-3 border-t border-slate-200/80 flex items-center justify-between gap-2">
+                  <span class="text-[11px] font-semibold ${isOpen ? "text-emerald-700" : "text-slate-500"}">
+                    Status Sesi: <strong>${isOpen ? "DIBUKA" : "DITUTUP"}</strong>
+                  </span>
+                  <button
+                    data-toggle-session="${id}"
+                    class="px-3.5 py-2 rounded-xl text-xs font-semibold transition ${
+                      isOpen
+                        ? "bg-rose-600 hover:bg-rose-700 text-white"
+                        : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                    }"
+                  >
+                    ${isOpen ? "Tutup Sesi Presensi" : "Buka Sesi Presensi"}
+                  </button>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      // B. Tabel Seluruh Jadwal Jumat & Sabtu
+      const filtered = myEntries.filter(([_, s]) => filterDay === "ALL" || s.hari === filterDay);
+      if (filtered.length === 0) {
+        allTbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">Belum ada jadwal mengajar yang ditetapkan Pengelola.</td></tr>';
+      } else {
+        allTbody.innerHTML = filtered
+          .map(([id, s]) => {
+            const r = rombelsMap[s.rombel_id];
+            const isOpen = s.is_session_open === true;
+            return `
+              <tr class="hover:bg-slate-50/70">
+                <td class="py-3 px-3">
+                  <span class="px-2 py-0.5 rounded-md font-bold text-[11px] ${s.hari === "Jumat" ? "bg-emerald-100 text-emerald-800" : "bg-sky-100 text-sky-800"}">${s.hari}</span>
+                  <div class="text-[11px] text-slate-500 mt-1">${s.sesi} (${s.jam_mulai} - ${s.jam_selesai})</div>
+                </td>
+                <td class="py-3 px-3 font-medium text-slate-700">${r ? `${r.jenjang} - ${r.nama_rombel}` : "-"}</td>
+                <td class="py-3 px-3 font-bold text-slate-900">${s.mata_pelajaran}</td>
+                <td class="py-3 px-3 text-slate-600">${s.metode}</td>
+                <td class="py-3 px-3 text-right">
+                  <button
+                    data-toggle-session="${id}"
+                    class="px-3 py-1.5 rounded-lg text-[11px] font-semibold ${
+                      isOpen ? "bg-emerald-100 text-emerald-800 border border-emerald-300" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }"
+                  >
+                    ${isOpen ? "Sesi Aktif (Tutup)" : "Buka Sesi"}
+                  </button>
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      // Event buka/tutup sesi presensi + otomatis catat kehadiran tutor
+      document.querySelectorAll("[data-toggle-session]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const schedId = btn.dataset.toggleSession;
+          const sched = mySchedulesMap[schedId];
+          const nextState = !sched.is_session_open;
+          const todayISO = getWIBNow().dateISO;
+
+          await update(ref(db, `schedules/${schedId}`), { is_session_open: nextState });
+
+          if (nextState) {
+            await set(ref(db, `tutor_attendances/${todayISO}/${schedId}/${currentUser.uid}`), {
+              status: "Hadir",
+              catatan: "Membuka sesi pembelajaran",
+              recorded_by: currentUser.uid,
+              created_at: Date.now()
+            });
+            showToast(`Sesi presensi ${sched.mata_pelajaran} DIBUKA.`);
+          } else {
+            showToast(`Sesi presensi ${sched.mata_pelajaran} DITUTUP.`);
+          }
+        });
+      });
+    }
+
+    document.getElementById("filterMySchedDay").addEventListener("change", renderSchedules);
+
+    // =========================================================================
+    // 2. MONITORING & INPUT MANUAL ABSENSI PER MATA PELAJARAN
+    // =========================================================================
+    let activeAttUnsub = null;
+
+    function loadClassAttendance() {
+      const schedId = document.getElementById("attSelectSchedule").value;
+      const dateISO = document.getElementById("attSelectDate").value || getWIBNow().dateISO;
+      const tbody = document.getElementById("classAttendanceBody");
+
+      if (activeAttUnsub) {
+        activeAttUnsub();
+        activeAttUnsub = null;
+      }
+
+      if (!schedId || !mySchedulesMap[schedId]) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">Pilih mata pelajaran untuk melihat daftar hadir.</td></tr>';
+        return;
+      }
+
+      const targetRombelId = mySchedulesMap[schedId].rombel_id;
+      const students = Object.entries(usersMap)
+        .filter(([_, u]) => u.role === "warga_belajar" && u.rombel_id === targetRombelId && u.is_active !== false)
+        .sort((a, b) => (a[1].nama_lengkap || "").localeCompare(b[1].nama_lengkap || ""));
+
+      activeAttUnsub = onValue(ref(db, `attendances/${dateISO}/${schedId}`), (snap) => {
+        const attRecords = snap.val() || {};
+
+        if (students.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">Belum ada Warga Belajar terdaftar di rombel ini.</td></tr>';
+          return;
+        }
+
+        const badgeColor = {
+          Hadir: "bg-emerald-100 text-emerald-800",
+          Izin: "bg-sky-100 text-sky-800",
+          Sakit: "bg-amber-100 text-amber-800",
+          "Tanpa Keterangan": "bg-rose-100 text-rose-800"
+        };
+
+        tbody.innerHTML = students
+          .map(([uid, s]) => {
+            const rec = attRecords[uid];
+            const status = rec ? rec.status : "Belum Absen";
+            const badge = badgeColor[status] || "bg-slate-100 text-slate-500";
+
+            return `
+              <tr class="hover:bg-slate-50/70">
+                <td class="py-2.5 px-3 font-mono font-semibold text-slate-700">${s.identifier}</td>
+                <td class="py-2.5 px-3 font-semibold text-slate-800">${s.nama_lengkap}</td>
+                <td class="py-2.5 px-3">
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${badge}">${status}</span>
+                </td>
+                <td class="py-2.5 px-3 text-[11px] text-slate-500">
+                  ${rec ? `${rec.metode_absen || ""}` : "-"}
+                  ${rec?.bukti_url ? ` • <a href="${rec.bukti_url}" target="_blank" class="text-sky-600 underline font-semibold">Lihat Surat</a>` : ""}
+                </td>
+                <td class="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
+                  <button data-mark-att="${uid}" data-status="Hadir" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-semibold">Hadir</button>
+                  <button data-mark-att="${uid}" data-status="Izin" class="px-2 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-lg text-[11px] font-semibold">Izin</button>
+                  <button data-mark-att="${uid}" data-status="Sakit" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-[11px] font-semibold">Sakit</button>
+                  <button data-mark-att="${uid}" data-status="Tanpa Keterangan" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[11px] font-semibold">Alfa</button>
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+
+        tbody.querySelectorAll("[data-mark-att]").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const siswaId = btn.dataset.markAtt;
+            const status = btn.dataset.status;
+            await set(ref(db, `attendances/${dateISO}/${schedId}/${siswaId}`), {
+              status,
+              metode_absen: "Input Manual Tutor",
+              recorded_by: currentUser.uid,
+              created_at: Date.now()
+            });
+            showToast(`Presensi ${usersMap[siswaId]?.nama_lengkap} dicatat: ${status}.`);
+          });
+        });
+      });
+    }
+
+    document.getElementById("attSelectSchedule").addEventListener("change", loadClassAttendance);
+    document.getElementById("attSelectDate").addEventListener("change", loadClassAttendance);
+
+    // =========================================================================
+    // 3. MANAJEMEN MATERI PEMBELAJARAN
+    // =========================================================================
+    document.getElementById("materialForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await push(ref(db, "materials"), {
+        schedule_id: document.getElementById("matScheduleId").value,
+        tutor_id: currentUser.uid,
+        tipe_link: document.getElementById("matTipe").value,
+        judul: document.getElementById("matJudul").value.trim(),
+        file_url: document.getElementById("matUrl").value.trim(),
+        deskripsi: document.getElementById("matDeskripsi").value.trim(),
+        created_at: Date.now()
+      });
+      document.getElementById("materialForm").reset();
+      showToast("Materi pembelajaran berhasil dibagikan.");
+    });
+
+    function renderMaterials() {
+      const container = document.getElementById("materialsList");
+      const entries = Object.entries(materialsMap)
+        .filter(([_, m]) => m.tutor_id === currentUser.uid)
+        .sort((a, b) => (b[1].created_at || 0) - (a[1].created_at || 0));
+
+      if (entries.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-400">Belum ada modul atau materi yang dibagikan.</p>';
+        return;
+      }
+
+      container.innerHTML = entries
+        .map(([id, m]) => {
+          const sched = mySchedulesMap[m.schedule_id] || allSchedulesMap[m.schedule_id] || {};
+          const r = rombelsMap[sched.rombel_id];
+          return `
+            <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 flex flex-col justify-between gap-3">
+              <div>
+                <div class="flex items-center justify-between gap-2">
+                  <span class="px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 text-[10px] font-bold">${m.tipe_link}</span>
+                  <span class="text-[11px] text-slate-500">${sched.mata_pelajaran || "-"} (${r ? r.nama_rombel : "-"})</span>
+                </div>
+                <h4 class="text-sm font-bold text-slate-900 mt-1.5">${m.judul}</h4>
+                ${m.deskripsi ? `<p class="text-xs text-slate-600 mt-1">${m.deskripsi}</p>` : ""}
+              </div>
+              <div class="flex items-center justify-between pt-2 border-t border-slate-200">
+                <a href="${m.file_url}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-sky-600 hover:underline inline-flex items-center gap-1">
+                  <span>Buka Tautan Materi</span>
+                  <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                </a>
+                <button data-del-mat="${id}" class="text-xs font-semibold text-rose-600 hover:text-rose-800">Hapus</button>
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+
+      lucide.createIcons();
+
+      container.querySelectorAll("[data-del-mat]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          if (confirm("Hapus materi pembelajaran ini?")) {
+            await remove(ref(db, `materials/${btn.dataset.delMat}`));
+            showToast("Materi dihapus.");
+          }
+        });
+      });
+    }
+
+    // =========================================================================
+    // 4. TUGAS & UJIAN (INTEGRASI GOOGLE FORM + EMBED)
+    // =========================================================================
+    function formatGoogleFormEmbedUrl(url) {
+      if (!url) return "";
+      if (url.includes("embedded=true")) return url;
+      return url.includes("?") ? `${url}&embedded=true` : `${url}?embedded=true`;
+    }
+
+    document.getElementById("assignmentForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await push(ref(db, "assignments"), {
+        schedule_id: document.getElementById("assignScheduleId").value,
+        tutor_id: currentUser.uid,
+        judul: document.getElementById("assignJudul").value.trim(),
+        gform_url: document.getElementById("assignGformUrl").value.trim(),
+        deadline: document.getElementById("assignDeadline").value || "",
+        instruksi: document.getElementById("assignInstruksi").value.trim(),
+        is_embed: document.getElementById("assignIsEmbed").checked,
+        created_at: Date.now()
+      });
+      document.getElementById("assignmentForm").reset();
+      document.getElementById("assignIsEmbed").checked = true;
+      showToast("Tugas Google Form berhasil dipublikasikan.");
+    });
+
+    function renderAssignments() {
+      const container = document.getElementById("assignmentsList");
+      const entries = Object.entries(assignmentsMap)
+        .filter(([_, a]) => a.tutor_id === currentUser.uid)
+        .sort((a, b) => (b[1].created_at || 0) - (a[1].created_at || 0));
+
+      if (entries.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-400">Belum ada tugas Google Form yang dibuat.</p>';
+        return;
+      }
+
+      container.innerHTML = entries
+        .map(([id, a]) => {
+          const sched = mySchedulesMap[a.schedule_id] || allSchedulesMap[a.schedule_id] || {};
+          const r = rombelsMap[sched.rombel_id];
+          return `
+            <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="space-y-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                    ${sched.mata_pelajaran || "-"} • ${r ? `${r.jenjang} ${r.nama_rombel}` : "-"}
+                  </span>
+                  <span class="px-2 py-0.5 rounded-md bg-slate-200 text-slate-700 text-[10px] font-semibold">
+                    ${a.is_embed ? "Mode Embed LMS" : "Tab Baru"}
+                  </span>
+                  ${a.deadline ? `<span class="text-[11px] text-rose-600 font-semibold">Deadline: ${a.deadline.replace("T", " ")} WIB</span>` : ""}
+                </div>
+                <h4 class="text-sm font-bold text-slate-900">${a.judul}</h4>
+                ${a.instruksi ? `<p class="text-xs text-slate-600">${a.instruksi}</p>` : ""}
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 shrink-0">
+                <button
+                  data-preview-gform="${id}"
+                  class="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl text-xs font-semibold"
+                >
+                  Pratinjau Form
+                </button>
+                <a
+                  href="${a.gform_url}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold"
+                >
+                  Tab Baru
+                </a>
+                <button
+                  data-del-assign="${id}"
+                  class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold"
+                >
+                  Hapus
+                </button>
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+
+      container.querySelectorAll("[data-preview-gform]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const a = assignmentsMap[btn.dataset.previewGform];
+          document.getElementById("embedModalTitle").textContent = a.judul;
+          document.getElementById("embedModalIframe").src = formatGoogleFormEmbedUrl(a.gform_url);
+          document.getElementById("embedModal").classList.remove("hidden");
+        });
+      });
+
+      container.querySelectorAll("[data-del-assign]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          if (confirm("Hapus tugas ini beserta data nilainya?")) {
+            const id = btn.dataset.delAssign;
+            await remove(ref(db, `assignments/${id}`));
+            await remove(ref(db, `submissions/${id}`));
+            showToast("Tugas dihapus.");
+          }
+        });
+      });
+    }
+
+    document.getElementById("closeEmbedModalBtn").addEventListener("click", () => {
+      document.getElementById("embedModal").classList.add("hidden");
+      document.getElementById("embedModalIframe").src = "";
+    });
+
+    // =========================================================================
+    // 5. VERIFIKASI TUGAS, INPUT NILAI MANUAL & IMPORT CSV GOOGLE FORM
+    // =========================================================================
+    let activeSubUnsub = null;
+
+    function populateAssignmentDropdown() {
+      const sel = document.getElementById("gradeSelectAssignment");
+      const prev = sel.value;
+      sel.innerHTML = '<option value="">-- Pilih Tugas / Evaluasi --</option>';
+
+      Object.entries(assignmentsMap)
+        .filter(([_, a]) => a.tutor_id === currentUser.uid)
+        .forEach(([id, a]) => {
+          const sched = mySchedulesMap[a.schedule_id] || allSchedulesMap[a.schedule_id] || {};
+          const r = rombelsMap[sched.rombel_id];
+          const opt = document.createElement("option");
+          opt.value = id;
+          opt.textContent = `${a.judul} — ${sched.mata_pelajaran || ""} (${r ? r.nama_rombel : ""})`;
+          sel.appendChild(opt);
+        });
+
+      if (prev && assignmentsMap[prev]) sel.value = prev;
+    }
+
+    document.getElementById("gradeSelectAssignment").addEventListener("change", () => {
+      const assignId = document.getElementById("gradeSelectAssignment").value;
+      const csvBox = document.getElementById("csvImportBox");
+
+      if (activeSubUnsub) {
+        activeSubUnsub();
+        activeSubUnsub = null;
+      }
+
+      if (!assignId) {
+        csvBox.classList.add("hidden");
+        currentSubmissions = {};
+        renderGradesTable();
+        return;
+      }
+
+      csvBox.classList.remove("hidden");
+      activeSubUnsub = onValue(ref(db, `submissions/${assignId}`), (snap) => {
+        currentSubmissions = snap.val() || {};
+        renderGradesTable();
+      });
+    });
+
+    function renderGradesTable() {
+      const tbody = document.getElementById("gradesTableBody");
+      const assignId = document.getElementById("gradeSelectAssignment").value;
+      const assign = assignmentsMap[assignId];
+
+      if (!assign) {
+        tbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-400">Pilih tugas pada menu dropdown di atas untuk mulai menilai.</td></tr>';
+        return;
+      }
+
+      const sched = mySchedulesMap[assign.schedule_id] || allSchedulesMap[assign.schedule_id] || {};
+      const students = Object.entries(usersMap)
+        .filter(([_, u]) => u.role === "warga_belajar" && u.rombel_id === sched.rombel_id && u.is_active !== false)
+        .sort((a, b) => (a[1].nama_lengkap || "").localeCompare(b[1].nama_lengkap || ""));
+
+      if (students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-400">Belum ada Warga Belajar di rombel tugas ini.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = students
+        .map(([uid, s]) => {
+          const sub = currentSubmissions[uid] || { status: "Belum", nilai: "", catatan_tutor: "" };
+          const statusColor =
+            sub.status === "Dinilai"
+              ? "bg-emerald-100 text-emerald-800"
+              : sub.status === "Selesai Dikerjakan"
+              ? "bg-sky-100 text-sky-800"
+              : "bg-slate-100 text-slate-600";
+
+          return `
+            <tr class="hover:bg-slate-50/70" data-grade-row="${uid}">
+              <td class="py-2.5 px-3 font-mono font-semibold text-slate-700">${s.identifier}</td>
+              <td class="py-2.5 px-3 font-semibold text-slate-800">${s.nama_lengkap}</td>
+              <td class="py-2.5 px-3">
+                <select class="grade-status-input px-2 py-1 rounded-lg text-[11px] font-bold border border-slate-200 ${statusColor}">
+                  <option value="Belum" ${sub.status === "Belum" ? "selected" : ""}>Belum</option>
+                  <option value="Selesai Dikerjakan" ${sub.status === "Selesai Dikerjakan" ? "selected" : ""}>Selesai Dikerjakan</option>
+                  <option value="Dinilai" ${sub.status === "Dinilai" ? "selected" : ""}>Dinilai</option>
+                </select>
+              </td>
+              <td class="py-2.5 px-3">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value="${sub.nilai !== undefined && sub.nilai !== null ? sub.nilai : ""}"
+                  placeholder="0-100"
+                  class="grade-score-input w-24 px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg font-semibold"
+                />
+              </td>
+              <td class="py-2.5 px-3">
+                <input
+                  type="text"
+                  value="${sub.catatan_tutor || ""}"
+                  placeholder="Catatan opsional"
+                  class="grade-note-input w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+                />
+              </td>
+              <td class="py-2.5 px-3 text-right">
+                <button
+                  data-save-grade="${uid}"
+                  class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold rounded-lg"
+                >
+                  Simpan
+                </button>
+              </td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      tbody.querySelectorAll("[data-save-grade]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const siswaId = btn.dataset.saveGrade;
+          const row = tbody.querySelector(`[data-grade-row="${siswaId}"]`);
+          const statusVal = row.querySelector(".grade-status-input").value;
+          const scoreRaw = row.querySelector(".grade-score-input").value;
+          const noteVal = row.querySelector(".grade-note-input").value.trim();
+
+          const finalStatus = scoreRaw !== "" && statusVal === "Belum" ? "Dinilai" : statusVal;
+
+          await set(ref(db, `submissions/${assignId}/${siswaId}`), {
+            status: finalStatus,
+            nilai: scoreRaw === "" ? "" : Number(scoreRaw),
+            catatan_tutor: noteVal,
+            submitted_at: Date.now()
+          });
+          showToast(`Nilai ${usersMap[siswaId]?.nama_lengkap} disimpan.`);
+        });
+      });
+    }
+
+    // Parser CSV tangguh (mendukung koma/titik koma & tanda kutip Google Form)
+    function parseCSVText(text) {
+      const lines = text.split(/\r?\n/).filter((l) => l.trim() !== "");
+      if (lines.length < 2) return { headers: [], rows: [] };
+
+      const delimiter = lines[0].includes(";") && !lines[0].includes(",") ? ";" : ",";
+      const parseLine = (line) => {
+        const result = [];
+        let cur = "";
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+              cur += '"';
+              i++;
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (ch === delimiter && !inQuotes) {
+            result.push(cur.trim());
+            cur = "";
+          } else {
+            cur += ch;
+          }
+        }
+        result.push(cur.trim());
+        return result;
+      };
+
+      const headers = parseLine(lines[0]);
+      const rows = lines.slice(1).map(parseLine);
+      return { headers, rows };
+    }
+
+    document.getElementById("csvFileInput").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        parsedCsvData = parseCSVText(ev.target.result);
+        if (parsedCsvData.headers.length === 0) {
+          alert("File CSV kosong atau format tidak terbaca.");
+          return;
+        }
+
+        const idSel = document.getElementById("csvIdColSelect");
+        const scoreSel = document.getElementById("csvScoreColSelect");
+        idSel.innerHTML = "";
+        scoreSel.innerHTML = "";
+
+        parsedCsvData.headers.forEach((h, idx) => {
+          const opt1 = document.createElement("option");
+          opt1.value = idx;
+          opt1.textContent = h || `Kolom ${idx + 1}`;
+          idSel.appendChild(opt1);
+
+          const opt2 = document.createElement("option");
+          opt2.value = idx;
+          opt2.textContent = h || `Kolom ${idx + 1}`;
+          scoreSel.appendChild(opt2);
+
+          const lower = (h || "").toLowerCase();
+          if (lower.includes("nisn") || lower.includes("username") || lower.includes("email") || lower.includes("id")) {
+            idSel.value = idx;
+          }
+          if (lower.includes("score") || lower.includes("nilai") || lower.includes("skor")) {
+            scoreSel.value = idx;
+          }
+        });
+
+        document.getElementById("csvFileSummary").textContent =
+          `File terbaca: ${file.name} (${parsedCsvData.rows.length} baris respons)`;
+        document.getElementById("csvMappingArea").classList.remove("hidden");
+      };
+      reader.readAsText(file);
+    });
+
+    document.getElementById("processCsvImportBtn").addEventListener("click", async () => {
+      const assignId = document.getElementById("gradeSelectAssignment").value;
+      const assign = assignmentsMap[assignId];
+      if (!assign) return;
+
+      const idColIdx = Number(document.getElementById("csvIdColSelect").value);
+      const scoreColIdx = Number(document.getElementById("csvScoreColSelect").value);
+      const sched = mySchedulesMap[assign.schedule_id] || allSchedulesMap[assign.schedule_id] || {};
+
+      // Petakan identifier siswa di rombel terkait -> uid
+      const studentLookup = {};
+      Object.entries(usersMap).forEach(([uid, u]) => {
+        if (u.role === "warga_belajar" && u.rombel_id === sched.rombel_id) {
+          const cleanId = (u.identifier || "").trim().toLowerCase();
+          studentLookup[cleanId] = uid;
+          studentLookup[`${cleanId}${DOMAIN_SUFFIX}`] = uid;
+        }
+      });
+
+      let matchedCount = 0;
+      const updates = {};
+
+      parsedCsvData.rows.forEach((cols) => {
+        const rawId = (cols[idColIdx] || "").trim().toLowerCase();
+        const rawScore = (cols[scoreColIdx] || "").trim();
+        const targetUid = studentLookup[rawId];
+
+        if (targetUid && rawScore !== "") {
+          // Ekstrak angka dari format Google Form seperti "85 / 100" atau "85,5"
+          const numericPart = rawScore.split("/")[0].replace(",", ".").trim();
+          const parsedNum = parseFloat(numericPart);
+          if (!Number.isNaN(parsedNum)) {
+            updates[`submissions/${assignId}/${targetUid}`] = {
+              status: "Dinilai",
+              nilai: parsedNum,
+              catatan_tutor: "Import CSV Google Form",
+              submitted_at: Date.now()
+            };
+            matchedCount++;
+          }
+        }
+      });
+
+      if (matchedCount === 0) {
+        alert("Tidak ada NISN/Username di file CSV yang cocok dengan daftar Warga Belajar pada rombel ini.");
+        return;
+      }
+
+      await update(ref(db), updates);
+      document.getElementById("csvMappingArea").classList.add("hidden");
+      document.getElementById("csvFileInput").value = "";
+      showToast(`Berhasil mengimpor nilai untuk ${matchedCount} Warga Belajar!`);
+    });
+  </script>
+</body>
+</html>
